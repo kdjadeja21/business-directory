@@ -35,7 +35,7 @@ export function BusinessCard({ business, index }: BusinessCardProps) {
       >
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="w-16 h-16">
-            <AvatarImage src={business.profilePhoto} />
+            <AvatarImage src={business.profilePhoto || undefined} />
             <AvatarFallback>
               {business.name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
