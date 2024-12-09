@@ -65,8 +65,4 @@ export async function POST(request: Request) {
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// Remove deprecated config export since Next.js 13+ App Router handles body parsing automatically
