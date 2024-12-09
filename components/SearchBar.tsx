@@ -36,6 +36,7 @@ export function SearchBar({
   availableCategories,
 }: SearchBarProps) {
   const [citySearchQuery, setCitySearchQuery] = useState("");
+  const [categorySearchQuery, setCategorySearchQuery] = useState("");
 
   // Combine constant cities and dynamic cities, prioritizing available cities
   const allCities = useMemo(() => {
@@ -63,6 +64,14 @@ export function SearchBar({
       city.toLowerCase().includes(lowercaseQuery)
     );
   }, [allCities, citySearchQuery]);
+
+  // Filter categories based on search
+  const filteredCategories = useMemo(() => {
+    const lowercaseQuery = categorySearchQuery.toLowerCase();
+    return availableCategories.filter((category) =>
+      category.toLowerCase().includes(lowercaseQuery)
+    );
+  }, [availableCategories, categorySearchQuery]);
 
   const handleCityChange = (value: string) => {
     setSelectedCity(value === "all" ? "" : value);
@@ -98,13 +107,12 @@ export function SearchBar({
           </SelectTrigger>
           <SelectContent>
             <div className="p-2 relative">
-              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search cities..."
                 value={citySearchQuery}
                 onChange={(e) => setCitySearchQuery(e.target.value)}
-                className="mb-2 pl-10"
+                className="mb-2"
               />
             </div>
             <SelectItem value="all">All Cities</SelectItem>
@@ -112,22 +120,9 @@ export function SearchBar({
               <SelectItem
                 key={city}
                 value={city}
-                disabled={!availableCities.includes(city)}
                 className="flex items-center justify-between"
               >
-                <div className="flex items-center gap-2">
-                  {city}
-                  {!isConstCity(city) && (
-                    <Badge variant="outline" className="ml-2 text-xs">
-                      Custom
-                    </Badge>
-                  )}
-                </div>
-                {!availableCities.includes(city) && (
-                  <span className="text-xs text-muted-foreground ml-2">
-                    (No businesses)
-                  </span>
-                )}
+                <div className="flex items-center gap-2">{city}</div>
               </SelectItem>
             ))}
           </SelectContent>
@@ -143,8 +138,17 @@ export function SearchBar({
             </div>
           </SelectTrigger>
           <SelectContent>
+            <div className="p-2 relative">
+              <Input
+                type="text"
+                placeholder="Search categories..."
+                value={categorySearchQuery}
+                onChange={(e) => setCategorySearchQuery(e.target.value)}
+                className="mb-2"
+              />
+            </div>
             <SelectItem value="all">All Categories</SelectItem>
-            {availableCategories.map((category) => (
+            {filteredCategories.map((category) => (
               <SelectItem key={category} value={category}>
                 {category}
               </SelectItem>

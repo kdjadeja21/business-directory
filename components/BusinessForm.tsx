@@ -19,19 +19,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Phone, Mail, Plus, Trash2, Upload, Tags } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Phone, Mail, Plus, Trash2, Upload } from "lucide-react";
 import { CITIES } from "@/lib/constants/cities";
 import Image from "next/image";
 import { CATEGORIES } from "@/lib/constants/categories";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import ReactSelect from "react-select";
+import CreatableSelect from "react-select/creatable";
+import { useAuth } from "@/hooks/useAuth";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -46,7 +41,13 @@ const formSchema = z.object({
   categories: z.array(z.string()).min(1, "Category is required"),
   contacts: z.object({
     phones: z.array(
-      z.string().min(10, "Phone number must be at least 10 digits")
+      z.object({
+        number: z
+          .string()
+          .max(10, "Phone number cannot exceed 10 digits")
+          .min(10, "Phone number must be 10 digits"),
+        hasWhatsapp: z.boolean().default(false),
+      })
     ),
     emails: z.array(z.string().email("Must be a valid email")),
   }),
@@ -61,6 +62,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -78,20 +80,33 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
           categories: [],
           city: "",
           contacts: {
-            phones: [""],
+            phones: [{ number: "", hasWhatsapp: false }],
             emails: [""],
           },
         },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast.error("You must be logged in to perform this action");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      const currentUsername = user.email?.split("@")[0] || "anonymous";
+      const businessData = {
+        ...values,
+        user_id: user.uid,
+        createdBy: isEditing ? initialData?.createdBy : currentUsername,
+        updatedBy: currentUsername,
+      };
+
       if (isEditing && initialData?.id) {
-        await businessService.update(initialData.id, values);
+        await businessService.update(initialData.id, businessData);
         toast.success("Business updated successfully!");
       } else {
-        await businessService.create(values);
+        await businessService.create(businessData);
         toast.success("Business added successfully!");
       }
       router.push("/admin");
@@ -184,23 +199,27 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                     <FormLabel className="text-sm font-medium text-gray-700">
                       City
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full h-10 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors">
-                          <SelectValue placeholder="Select a city" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[300px]">
-                        {CITIES.map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <CreatableSelect
+                        options={CITIES.map((city) => ({
+                          value: city,
+                          label: city,
+                        }))}
+                        value={
+                          field.value
+                            ? {
+                                value: field.value,
+                                label: field.value,
+                              }
+                            : null
+                        }
+                        onChange={(newValue) => {
+                          field.onChange(newValue?.value || "");
+                        }}
+                        className="border-slate-200"
+                        classNamePrefix="react-select"
+                      />
+                    </FormControl>
                     <FormMessage className="text-sm text-red-500" />
                   </FormItem>
                 )}
@@ -311,7 +330,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                 <FormItem>
                   <FormLabel>Categories</FormLabel>
                   <FormControl>
-                    <ReactSelect
+                    <CreatableSelect
                       isMulti
                       options={CATEGORIES.map((category) => ({
                         value: category,
@@ -347,35 +366,42 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                     </FormLabel>
                     <FormControl>
                       <div className="space-y-3">
-                        {field.value.map((_, index) => (
-                          <div key={index} className="flex gap-3">
-                            <div className="flex gap-3 flex-1">
-                              <Input
-                                className="w-24 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                                placeholder="+91"
-                                value={field.value[index].split(" ")[0] || ""}
-                                onChange={(e) => {
+                        {field.value.map((phone, index) => (
+                          <div key={index} className="flex gap-3 items-center">
+                            <Input
+                              placeholder="Enter 10-digit phone number"
+                              value={phone.number}
+                              onChange={(e) => {
+                                const newPhones = [...field.value];
+                                newPhones[index] = {
+                                  ...newPhones[index],
+                                  number: e.target.value,
+                                };
+                                field.onChange(newPhones);
+                              }}
+                              className="flex-1 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                              maxLength={10}
+                            />
+                            <div className="flex items-center gap-2 min-w-[140px]">
+                              <Switch
+                                id={`whatsapp-${index}`}
+                                checked={phone.hasWhatsapp}
+                                onCheckedChange={(checked) => {
                                   const newPhones = [...field.value];
-                                  const number =
-                                    field.value[index].split(" ")[1] || "";
-                                  newPhones[index] =
-                                    `${e.target.value} ${number}`.trim();
+                                  newPhones[index] = {
+                                    ...newPhones[index],
+                                    hasWhatsapp: checked,
+                                  };
                                   field.onChange(newPhones);
                                 }}
+                                className="data-[state=checked]:bg-green-400 data-[state=checked]:hover:bg-green-500"
                               />
-                              <Input
-                                className="flex-1 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                                placeholder="Enter phone number"
-                                value={field.value[index].split(" ")[1] || ""}
-                                onChange={(e) => {
-                                  const newPhones = [...field.value];
-                                  const code =
-                                    field.value[index].split(" ")[0] || "";
-                                  newPhones[index] =
-                                    `${code} ${e.target.value}`.trim();
-                                  field.onChange(newPhones);
-                                }}
-                              />
+                              <label
+                                htmlFor={`whatsapp-${index}`}
+                                className="text-sm text-gray-600"
+                              >
+                                Has WhatsApp?
+                              </label>
                             </div>
                             {index > 0 && (
                               <Button
@@ -397,7 +423,12 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => field.onChange([...field.value, ""])}
+                          onClick={() =>
+                            field.onChange([
+                              ...field.value,
+                              { number: "", hasWhatsapp: false },
+                            ])
+                          }
                           className="w-full border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 transition-colors"
                         >
                           <Plus className="h-4 w-4 mr-2" />

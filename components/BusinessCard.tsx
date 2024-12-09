@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { Business } from "@/types/business";
 import Link from "next/link";
+import { getInitials } from "@/lib/utils";
 
 interface BusinessCardProps {
   business: Business;
@@ -36,9 +37,7 @@ export function BusinessCard({ business, index }: BusinessCardProps) {
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="w-16 h-16">
             <AvatarImage src={business.profilePhoto || undefined} />
-            <AvatarFallback>
-              {business.name.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
+            <AvatarFallback>{getInitials(business.name)}</AvatarFallback>
           </Avatar>
           <div>
             <h3 className="text-2xl font-bold">{business.name}</h3>
@@ -65,7 +64,7 @@ export function BusinessCard({ business, index }: BusinessCardProps) {
             {primaryPhone && (
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>{primaryPhone}</span>
+                <span>{primaryPhone.number}</span>
               </div>
             )}
             {primaryEmail && (

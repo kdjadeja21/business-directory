@@ -2,11 +2,12 @@
 
 import { Business } from "@/types/business";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Phone, Mail } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Mail, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { getInitials } from "@/lib/utils";
 
 interface BusinessDetailsProps {
   business: Business;
@@ -37,7 +38,7 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
               />
             ) : (
               <AvatarFallback className="text-xl">
-                {business.name.slice(0, 2).toUpperCase()}
+                {getInitials(business.name)}
               </AvatarFallback>
             )}
           </Avatar>
@@ -83,11 +84,21 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                 <div key={index} className="flex items-center gap-3 group">
                   <Phone className="h-5 w-5 text-primary" />
                   <a
-                    href={`tel:${phone}`}
+                    href={`tel:${phone.number}`}
                     className="hover:text-primary hover:underline transition-colors text-lg"
                   >
-                    {phone}
+                    {phone.number}
                   </a>
+                  {phone.hasWhatsapp && (
+                    <a
+                      href={`https://wa.me/${phone.number.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-500 hover:text-green-600 transition-colors"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                    </a>
+                  )}
                 </div>
               ))}
               {business.contacts.emails.map((email, index) => (

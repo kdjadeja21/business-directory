@@ -7,11 +7,17 @@ export interface Business {
   categories: string[];
   city: string;
   contacts: {
-    phones: string[];
+    phones: Array<{
+      number: string;
+      hasWhatsapp: boolean;
+    }>;
     emails: string[];
   };
   createdAt: string;
   updatedAt: string;
+  user_id: string;
+  createdBy: string;
+  updatedBy: string;
 }
 
 export interface BusinessFormData

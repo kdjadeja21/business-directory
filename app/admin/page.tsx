@@ -12,8 +12,9 @@ import {
   Mail,
   Search,
   Filter,
+  LogOut,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { businessService } from "@/lib/services/businessService";
 import { toast } from "sonner";
 import { DataTable } from "@/components/ui/data-table";
@@ -40,6 +41,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/useAuth";
+import { auth } from "@/lib/firebase";
+import { Toaster } from "sonner";
+import { getInitials } from "@/lib/utils";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -63,6 +68,20 @@ export default function AdminDashboard() {
     availableCities,
   } = useBusinessSearch(businesses);
 
+  const pathname = usePathname();
+
+  const { user, loading: authLoading } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      router.push("/admin/signin");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
+
   const columns: ColumnDef<Business>[] = [
     {
       accessorKey: "name",
@@ -80,7 +99,7 @@ export default function AdminDashboard() {
                 />
               ) : (
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {business.name.slice(0, 2).toUpperCase()}
+                  {getInitials(business.name)}
                 </AvatarFallback>
               )}
             </Avatar>
@@ -139,7 +158,7 @@ export default function AdminDashboard() {
             <div className="text-sm flex items-center gap-2">
               <Phone className="h-4 w-4 text-primary" />
               <span className="font-medium">
-                {contacts?.phones?.[0] || "N/A"}
+                {contacts?.phones?.[0]?.number || "N/A"}
               </span>
             </div>
             <div className="text-sm flex items-center gap-2">
@@ -183,6 +202,28 @@ export default function AdminDashboard() {
       },
     },
     {
+      accessorKey: "createdBy",
+      header: "Created By",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm">
+            {row.getValue("createdBy")}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "updatedBy",
+      header: "Last Updated By",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm">
+            {row.getValue("updatedBy")}
+          </span>
+        </div>
+      ),
+    },
+    {
       id: "actions",
       cell: ({ row }) => {
         const business = row.original;
@@ -222,6 +263,12 @@ export default function AdminDashboard() {
     fetchBusinesses();
   }, []);
 
+  useEffect(() => {
+    if (!authLoading && !user && pathname !== "/admin/signin") {
+      router.push("/admin/signin");
+    }
+  }, [user, authLoading, router, pathname]);
+
   const fetchBusinesses = async () => {
     try {
       const data = await businessService.getAll();
@@ -260,6 +307,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto py-12 px-6">
+      <Toaster position="top-center" />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
         <div>
           <h1 className="text-4xl font-bold text-gray-900">
@@ -269,14 +317,25 @@ export default function AdminDashboard() {
             Manage and monitor your business listings
           </p>
         </div>
-        <Button
-          onClick={() => router.push("/admin/new")}
-          size="lg"
-          className="shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg"
-        >
-          <Plus className="mr-2.5 h-5 w-5 animate-pulse" />
-          <span className="relative inline-block">Add New Business</span>
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            onClick={() => router.push("/admin/new")}
+            size="lg"
+            className="shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg"
+          >
+            <Plus className="mr-2.5 h-5 w-5 animate-pulse" />
+            <span className="relative inline-block">Add New Business</span>
+          </Button>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="lg"
+            className="shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <LogOut className="mr-2 h-5 w-5" />
+            Logout
+          </Button>
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -291,23 +350,13 @@ export default function AdminDashboard() {
                 className="pl-10"
               />
             </div>
-            {/* <div className="flex gap-4">
-              <Button variant="outline" className="w-full md:w-auto">
-                <Filter className="mr-2 h-4 w-4" />
-                Filters
-              </Button>
-            </div> */}
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={filteredBusinesses || []}
-            // className="border-0"
-          />
+          <DataTable columns={columns} data={filteredBusinesses || []} />
         </CardContent>
       </Card>
 

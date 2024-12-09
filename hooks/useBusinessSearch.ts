@@ -27,16 +27,18 @@ export function useBusinessSearch(businesses: Business[]) {
       // Search in name
       const matchesName = business.name
         .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        .trim()
+        .includes(searchQuery.toLowerCase().trim());
 
       // Search in city
       const matchesCitySearch = business.city
         .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        .trim()
+        .includes(searchQuery.toLowerCase().trim());
 
       // Search in categories
       const matchesCategorySearch = business.categories?.some((category) =>
-        category.toLowerCase().includes(searchQuery.toLowerCase())
+        category.toLowerCase().trim().includes(searchQuery.toLowerCase().trim())
       );
 
       // Combined search match
