@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getInitials } from "@/lib/utils";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 
 interface BusinessDetailsProps {
   business: Business;
@@ -96,7 +97,7 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                       rel="noopener noreferrer"
                       className="text-green-500 hover:text-green-600 transition-colors"
                     >
-                      <MessageCircle className="h-5 w-5" />
+                      <WhatsAppIcon className="h-5 w-5" />
                     </a>
                   )}
                 </div>
