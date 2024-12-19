@@ -1,29 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { Business } from "@/types/business";
 import { SearchBar } from "@/components/SearchBar";
 import { BusinessGrid } from "@/components/BusinessGrid";
 import { Pagination } from "@/components/Pagination";
 import { useBusinessSearch } from "@/hooks/useBusinessSearch";
-import { BusinessCardSkeleton } from "@/components/BusinessCardSkeleton";
 import { businessService } from "@/lib/services/businessService";
+import { Loader } from "@/components/Loader";
 
-function LoadingSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <BusinessCardSkeleton key={index} />
-      ))}
-    </div>
-  );
-}
+const ITEMS_PER_PAGE = 5;
 
 export default function BusinessDirectory() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchBusinesses = async () => {
@@ -43,9 +34,6 @@ export default function BusinessDirectory() {
   const {
     searchQuery,
     setSearchQuery,
-    currentPage,
-    setCurrentPage,
-    totalPages,
     businesses: filteredBusinesses,
     totalResults,
     selectedTags,
@@ -56,8 +44,14 @@ export default function BusinessDirectory() {
     availableCities,
   } = useBusinessSearch(businesses);
 
+  const totalPages = Math.ceil(filteredBusinesses.length / ITEMS_PER_PAGE);
+  const paginatedBusinesses = filteredBusinesses.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   if (loading) {
-    return <LoadingSkeleton />;
+    return <Loader />;
   }
 
   return (
@@ -79,7 +73,7 @@ export default function BusinessDirectory() {
         </p>
       </div>
 
-      <BusinessGrid businesses={filteredBusinesses} />
+      <BusinessGrid businesses={paginatedBusinesses} />
 
       {totalPages > 1 && (
         <Pagination

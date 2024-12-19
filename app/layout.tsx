@@ -16,7 +16,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <footer className="py-4 text-center text-gray-600">
+          Made with ❤️ in India By{" "}
+          <span className="text-blue-500">Krushnasinh Jadeja</span>
+        </footer>
+      </body>
     </html>
   );
 }

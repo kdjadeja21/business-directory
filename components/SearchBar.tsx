@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, MapPin, Tags } from "lucide-react";
+import { Search, MapPin, Tags, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SearchBarProps {
@@ -95,8 +95,16 @@ export function SearchBar({
             placeholder="Search businesses..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 pr-8"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         <Select value={selectedCity || "all"} onValueChange={handleCityChange}>
           <SelectTrigger className="w-[200px]">

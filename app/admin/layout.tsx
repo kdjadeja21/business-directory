@@ -3,7 +3,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader } from "@/components/Loader";
 
 export default function AdminLayout({
   children,
@@ -21,14 +21,7 @@ export default function AdminLayout({
   }, [user, loading, router, pathname]);
 
   if (loading) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8 font-sans">
-          Business Directory
-        </h1>
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!user && pathname !== "/admin/signin") {

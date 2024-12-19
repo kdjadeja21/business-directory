@@ -88,6 +88,12 @@ export default function AdminDashboard() {
       header: "Business",
       cell: ({ row }) => {
         const business = row.original;
+        const briefDescription = business.brief || "No description available";
+        const truncatedDescription =
+          briefDescription.length > 21
+            ? `${briefDescription.slice(0, 21)}...`
+            : briefDescription;
+
         return (
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 border-2 border-gray-100">
@@ -107,8 +113,8 @@ export default function AdminDashboard() {
               <span className="font-semibold text-gray-900">
                 {business.name}
               </span>
-              <span className="text-sm text-muted-foreground line-clamp-1">
-                {business.brief || "No description available"}
+              <span className="text-sm text-muted-foreground truncate">
+                {truncatedDescription}
               </span>
             </div>
           </div>

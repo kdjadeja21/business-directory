@@ -16,6 +16,11 @@ interface BusinessCardProps {
 export function BusinessCard({ business, index }: BusinessCardProps) {
   const primaryPhone = business.contacts.phones[0];
   const primaryEmail = business.contacts.emails[0];
+  const briefDescription = business.brief || "No description available";
+  const truncatedDescription =
+    briefDescription.length > 21
+      ? `${briefDescription.slice(0, 21)}...`
+      : briefDescription;
 
   return (
     <Link href={`/business/${business.id}`}>
@@ -59,7 +64,7 @@ export function BusinessCard({ business, index }: BusinessCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground mb-4">{business.brief}</p>
+          <p className="text-muted-foreground mb-4">{truncatedDescription}</p>
           <div className="space-y-2">
             {primaryPhone && (
               <div className="flex items-center gap-2">
