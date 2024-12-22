@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Loader } from "@/components/Loader";
+import { PageLayout } from "@/components/layouts/PageLayout";
 
 export default function AdminLayout({
   children,
@@ -21,12 +22,16 @@ export default function AdminLayout({
   }, [user, loading, router, pathname]);
 
   if (loading) {
-    return <Loader />;
+    return (
+      <PageLayout>
+        <Loader />
+      </PageLayout>
+    );
   }
 
   if (!user && pathname !== "/admin/signin") {
     return null;
   }
 
-  return <>{children}</>;
+  return <PageLayout>{children}</PageLayout>;
 }

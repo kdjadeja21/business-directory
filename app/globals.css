@@ -80,3 +80,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add these styles for the 3D flip effect */
+.perspective {
+  perspective: 1000px;
+}
+
+.perspective > div {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+@layer utilities {
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  .backface-hidden {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}

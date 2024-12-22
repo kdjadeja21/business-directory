@@ -2,13 +2,22 @@
 
 import { Business } from "@/types/business";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Phone, Mail, MessageCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
+  Mail,
+  MessageCircle,
+  Share2,
+  CreditCard,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getInitials } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { toast } from "sonner";
 
 interface BusinessDetailsProps {
   business: Business;
@@ -16,17 +25,57 @@ interface BusinessDetailsProps {
 
 export function BusinessDetails({ business }: BusinessDetailsProps) {
   const router = useRouter();
+  const profileCardUrl = `${
+    process.env.NEXT_PUBLIC_BASE_URL || ""
+  }/profilecard/${business.id}`;
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        // Use Web Share API if available
+        await navigator.share({
+          title: business.name,
+          text: business.brief,
+          url: profileCardUrl,
+        });
+      } else {
+        // Fallback to clipboard copy
+        await navigator.clipboard.writeText(profileCardUrl);
+        toast.success("Profile card link copied to clipboard!");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast.error("Failed to share profile card");
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="mb-6 hover:bg-gray-100 transition-colors"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to directory
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/")}
+          className="hover:bg-gray-100 transition-colors"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to directory
+        </Button>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => router.push(`/profilecard/${business.id}`)}
+          >
+            <CreditCard className="h-4 w-4" />
+            <span>View Card</span>
+          </Button>
+
+          <Button variant="outline" size="icon" onClick={handleShare}>
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader className="flex flex-col md:flex-row gap-6 items-center">
