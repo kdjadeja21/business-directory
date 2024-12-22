@@ -12,3 +12,10 @@ export function getInitials(name: string) {
   }
   return name.slice(0, 2).toUpperCase();
 }
+
+export function truncateText(text: string, charLimit: number): string {
+  if (text.length > charLimit) {
+    return text.slice(0, charLimit) + "...";
+  }
+  return text;
+}

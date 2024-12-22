@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Business } from "@/types/business";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { getInitials, truncateText } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { Rotate3D } from "lucide-react";
@@ -17,10 +17,22 @@ interface ProfileCardProps {
 
 export function ProfileCard({ business }: ProfileCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [hasFlipped, setHasFlipped] = useState(false); // New state to track if the card has flipped once
   const router = useRouter();
   const profileUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ""}/profilecard/${
     business.id
   }`;
+
+  useEffect(() => {
+    if (!hasFlipped) {
+      const timer = setTimeout(() => {
+        setIsFlipped(true);
+        setHasFlipped(true); // Set to true after the first flip
+      }, 1500);
+
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+  }, [hasFlipped]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100">
@@ -82,7 +94,9 @@ export function ProfileCard({ business }: ProfileCardProps) {
                   </Avatar>
                   <div className="space-y-2">
                     <h2 className="text-2xl font-bold">{business.name}</h2>
-                    <p className="text-muted-foreground">{business.brief}</p>
+                    <p className="text-muted-foreground">
+                      {truncateText(business.brief, 51)}
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {business.categories.map((category) => (

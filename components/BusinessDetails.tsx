@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { getInitials } from "@/lib/utils";
+import { getInitials, truncateText } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { toast } from "sonner";
 
@@ -77,7 +77,7 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
         </div>
       </div>
 
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
         <CardHeader className="flex flex-col md:flex-row gap-6 items-center">
           <Avatar className="w-32 h-32 ring-2 ring-offset-2 ring-gray-200">
             {business.profilePhoto ? (
@@ -101,8 +101,8 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                 <MapPin className="h-5 w-5" />
                 <span className="text-lg">{business.city}</span>
               </div>
-              <p className="text-muted-foreground mt-3 text-lg">
-                {business.brief}
+              <p className="text-muted-foreground mt-3 text-lg break-words overflow-hidden text-ellipsis whitespace-normal max-w-full">
+                {truncateText(business.brief, 51)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center md:justify-start">
@@ -118,10 +118,10 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-8 px-6 py-8">
+        <CardContent className="space-y-8 px-6 py-8 overflow-hidden">
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-primary">About</h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed break-words overflow-hidden text-ellipsis whitespace-normal max-w-full">
               {business.description}
             </p>
           </div>
