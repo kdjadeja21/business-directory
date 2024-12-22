@@ -19,3 +19,19 @@ export function truncateText(text: string, charLimit: number): string {
   }
   return text;
 }
+
+export function generateWhatsAppLink(
+  countryCode: string,
+  phoneNumber: string
+): string {
+  // Ensure that the country code doesn't have any non-numeric characters or leading '+'
+  const formattedCountryCode = countryCode.startsWith("+")
+    ? countryCode.slice(1)
+    : countryCode;
+
+  // Combine the country code and phone number to create the full phone number
+  const fullPhoneNumber = formattedCountryCode + phoneNumber;
+
+  // Return the WhatsApp link
+  return `https://wa.me/${fullPhoneNumber}`;
+}

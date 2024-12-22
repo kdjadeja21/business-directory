@@ -27,6 +27,14 @@ import { CATEGORIES } from "@/lib/constants/categories";
 import CreatableSelect from "react-select/creatable";
 import { useAuth } from "@/hooks/useAuth";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Correct import for Select component
+import { countries } from "@/lib/constants/countries"; // Correct import for country codes
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -47,6 +55,7 @@ const formSchema = z.object({
           .max(10, "Phone number cannot exceed 10 digits")
           .min(10, "Phone number must be 10 digits"),
         hasWhatsapp: z.boolean().default(false),
+        countryCode: z.string().optional(),
       })
     ),
     emails: z.array(z.string().email("Must be a valid email")),
@@ -63,6 +72,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,7 +90,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
           categories: [],
           city: "",
           contacts: {
-            phones: [{ number: "", hasWhatsapp: false }],
+            phones: [{ countryCode: "+91", number: "", hasWhatsapp: false }],
             emails: [""],
           },
         },
@@ -159,6 +169,12 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
       e.target.value = "";
     }
   };
+
+  const filteredCountries = countries.filter(
+    (country) =>
+      country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      country.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Card className="max-w-4xl mx-auto bg-slate-50 shadow-xl rounded-lg">
@@ -367,7 +383,51 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                     <FormControl>
                       <div className="space-y-3">
                         {field.value.map((phone, index) => (
-                          <div key={index} className="flex gap-3 items-center">
+                          <div
+                            key={index}
+                            className="flex flex-col md:flex-row gap-3 items-center"
+                          >
+                            <Select
+                              value={phone.countryCode || "+91"}
+                              onValueChange={(value) => {
+                                const newPhones = [...field.value];
+                                newPhones[index] = {
+                                  ...newPhones[index],
+                                  countryCode: value,
+                                };
+                                field.onChange(newPhones);
+                              }}
+                            >
+                              <SelectTrigger className="w-full md:w-auto">
+                                <div className="flex items-center gap-2">
+                                  <SelectValue placeholder="Select Country Code" />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <div className="p-2 relative">
+                                  <Input
+                                    type="text"
+                                    placeholder="Search country codes..."
+                                    className="mb-2"
+                                    value={searchTerm}
+                                    onChange={(e) =>
+                                      setSearchTerm(e.target.value)
+                                    }
+                                  />
+                                </div>
+                                {filteredCountries.map((country) => (
+                                  <SelectItem
+                                    key={country.name}
+                                    value={country.code}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {country.code} - {country.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <Input
                               placeholder="Enter 10-digit phone number"
                               value={phone.number}
@@ -426,7 +486,11 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                           onClick={() =>
                             field.onChange([
                               ...field.value,
-                              { number: "", hasWhatsapp: false },
+                              {
+                                countryCode: "+91",
+                                number: "",
+                                hasWhatsapp: false,
+                              },
                             ])
                           }
                           className="w-full border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 transition-colors"

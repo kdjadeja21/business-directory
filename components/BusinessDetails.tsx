@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { getInitials, truncateText } from "@/lib/utils";
+import { getInitials, truncateText, generateWhatsAppLink } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { toast } from "sonner";
 
@@ -134,14 +134,17 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                 <div key={index} className="flex items-center gap-3 group">
                   <Phone className="h-5 w-5 text-primary" />
                   <a
-                    href={`tel:${phone.number}`}
+                    href={`tel:${phone.countryCode}${phone.number}`}
                     className="hover:text-primary hover:underline transition-colors text-lg"
                   >
                     {phone.number}
                   </a>
                   {phone.hasWhatsapp && (
                     <a
-                      href={`https://wa.me/${phone.number.replace(/\D/g, "")}`}
+                      href={generateWhatsAppLink(
+                        phone.countryCode || "+91",
+                        phone.number
+                      )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-green-500 hover:text-green-600 transition-colors"

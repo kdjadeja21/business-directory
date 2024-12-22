@@ -8,6 +8,7 @@ export interface Business {
   city: string;
   contacts: {
     phones: Array<{
+      countryCode?: string;
       number: string;
       hasWhatsapp: boolean;
     }>;
