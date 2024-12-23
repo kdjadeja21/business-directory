@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { businessService } from "@/lib/services/businessService";
 import { ProfileCard } from "@/components/ProfileCard";
 import { Loader } from "@/components/Loader";
+import { notFound } from "next/navigation";
 
 export async function generateStaticParams() {
   try {
@@ -23,7 +24,7 @@ export default async function ProfileCardPage({
   const business = await businessService.getById(params.id);
 
   if (!business) {
-    return <div>Business not found</div>;
+    notFound();
   }
 
   return (

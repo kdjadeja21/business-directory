@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { businessService } from "@/lib/services/businessService";
 import { BusinessDetails } from "@/components/BusinessDetails";
 import { Loader } from "@/components/Loader";
+import { notFound } from "next/navigation";
 
 export async function generateStaticParams() {
   try {
@@ -23,7 +24,7 @@ export default async function BusinessPage({
   const business = await businessService.getById(params.id);
 
   if (!business) {
-    return <div>Business not found</div>;
+    notFound();
   }
 
   return (
