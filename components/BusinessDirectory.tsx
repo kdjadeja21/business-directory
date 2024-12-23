@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Business } from "@/types/business";
 import { SearchBar } from "@/components/SearchBar";
 import { BusinessGrid } from "@/components/BusinessGrid";
@@ -8,13 +8,18 @@ import { Pagination } from "@/components/Pagination";
 import { useBusinessSearch } from "@/hooks/useBusinessSearch";
 import { businessService } from "@/lib/services/businessService";
 import { Loader } from "@/components/Loader";
+import { ItemsPerPage } from "@/components/ItemsPerPage";
 
-const ITEMS_PER_PAGE = 5;
+const paginationStyles = {
+  wrapper: "flex flex-col gap-8",
+  paginationWrapper: "flex items-center justify-center w-full mt-8 mb-4",
+  controlsWrapper: "flex flex-col sm:flex-row items-center gap-4 sm:gap-6",
+};
 
 export default function BusinessDirectory() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const mainRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchBusinesses = async () => {
@@ -42,20 +47,34 @@ export default function BusinessDirectory() {
     selectedCity,
     setSelectedCity,
     availableCities,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    itemsPerPage,
+    setItemsPerPage,
   } = useBusinessSearch(businesses);
 
-  const totalPages = Math.ceil(filteredBusinesses.length / ITEMS_PER_PAGE);
-  const paginatedBusinesses = filteredBusinesses.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const scrollToTop = () => {
+    mainRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    scrollToTop();
+  };
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+    scrollToTop();
+  };
 
   if (loading) {
     return <Loader />;
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="container mx-auto px-4 py-8" ref={mainRef}>
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-6">Business Directory</h1>
         <SearchBar
@@ -73,15 +92,27 @@ export default function BusinessDirectory() {
         </p>
       </div>
 
-      <BusinessGrid businesses={paginatedBusinesses} />
+      <div className={paginationStyles.wrapper}>
+        <BusinessGrid businesses={filteredBusinesses} />
 
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      )}
+        <div className={paginationStyles.paginationWrapper}>
+          <div className={paginationStyles.controlsWrapper}>
+            <ItemsPerPage
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              options={[5, 10, 15, 20]}
+            />
+            
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

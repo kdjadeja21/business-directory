@@ -9,8 +9,7 @@ export function useBusinessSearch(businesses: Business[]) {
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  const ITEMS_PER_PAGE = 9;
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const availableCategories = useMemo(() => {
     const categories = new Set(businesses.flatMap((b) => b.categories || []));
@@ -59,13 +58,13 @@ export function useBusinessSearch(businesses: Business[]) {
 
   // Calculate pagination
   const totalResults = filteredBusinesses.length;
-  const totalPages = Math.ceil(totalResults / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalResults / itemsPerPage);
 
   // Get current page of businesses
   const paginatedBusinesses = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredBusinesses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredBusinesses, currentPage]);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBusinesses.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBusinesses, currentPage, itemsPerPage]);
 
   return {
     searchQuery,
@@ -81,5 +80,7 @@ export function useBusinessSearch(businesses: Business[]) {
     selectedCity,
     setSelectedCity,
     availableCities,
+    itemsPerPage,
+    setItemsPerPage,
   };
 }

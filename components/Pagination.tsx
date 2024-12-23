@@ -20,42 +20,92 @@ export function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const delta = 2; // Number of pages to show on each side of current page
+    const range = [];
+    const rangeWithDots = [];
+
+    // Always show first page
+    range.push(1);
+
+    for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+      if (i > 1 && i < totalPages) {
+        range.push(i);
+      }
+    }
+
+    // Always show last page
+    if (totalPages > 1) {
+      range.push(totalPages);
+    }
+
+    // Add dots where needed
+    let l;
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    return rangeWithDots;
+  };
+
   return (
-    <PaginationRoot className="mt-6">
+    <PaginationRoot>
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious
+          <PaginationPrevious 
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage <= 1}
           />
         </PaginationItem>
 
-        {/* Desktop View */}
-        <div className="hidden sm:flex items-center gap-1">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <PaginationItem key={page}>
-              <PaginationLink
-                onClick={() => onPageChange(page)}
-                isActive={currentPage === page}
-              >
-                {page}
-              </PaginationLink>
+        {/* Desktop View - Show all page numbers */}
+        <div className="hidden sm:flex">
+          {getPageNumbers().map((page, index) => (
+            <PaginationItem key={index}>
+              {page === '...' ? (
+                <span className="px-4 py-2 text-sm text-muted-foreground">
+                  {page}
+                </span>
+              ) : (
+                <PaginationLink
+                  onClick={() => onPageChange(page as number)}
+                  isActive={currentPage === page}
+                >
+                  {(page as number).toString().padStart(2, '0')}
+                </PaginationLink>
+              )}
             </PaginationItem>
           ))}
         </div>
 
-        {/* Mobile View */}
-        <div className="sm:hidden flex items-center gap-1 px-2">
-          <span className="text-sm">
-            {String(currentPage).padStart(2, "0")} of{" "}
-            {String(totalPages).padStart(2, "0")} pages
-          </span>
+        {/* Mobile View - Show current/total */}
+        <div className="sm:hidden">
+          <PaginationItem>
+            <div className="flex items-center px-4">
+              <span className="text-sm font-medium">
+                {currentPage.toString().padStart(2, '0')}
+              </span>
+              <span className="text-sm text-muted-foreground mx-2">of</span>
+              <span className="text-sm font-medium">
+                {totalPages.toString().padStart(2, '0')}
+              </span>
+            </div>
+          </PaginationItem>
         </div>
 
         <PaginationItem>
-          <PaginationNext
+          <PaginationNext 
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage >= totalPages}
           />
         </PaginationItem>
       </PaginationContent>
