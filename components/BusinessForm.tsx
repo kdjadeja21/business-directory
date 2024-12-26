@@ -262,9 +262,6 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
   );
 
   return (
-    <Card className="max-w-5xl mx-auto bg-white shadow-xl rounded-lg border-0">
-      <CardContent className="p-8">
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-6">
@@ -424,8 +421,8 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                   <FormControl>
                     <div className="space-y-4">
                       {field.value.map((address, addressIndex) => (
-                        <Card key={addressIndex} className="bg-slate-50/50 border border-slate-200">
-                          <CardContent className="p-6">
+                        <Card key={addressIndex} className="bg-white sm:bg-slate-50/50 border-0 sm:border sm:border-slate-200">
+                          <CardContent className="p-4 sm:p-6">
                             <div className="flex justify-between items-center mb-6">
                               <h3 className="text-lg font-semibold text-gray-900">
                                 Location {addressIndex + 1}
@@ -446,9 +443,9 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                               )}
                             </div>
                             
-                            <div className="space-y-6">
-                              <div className="bg-white p-4 rounded-lg border border-slate-200">
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Address Lines</h4>
+                            <div className="space-y-4 sm:space-y-6">
+                              <div className="bg-transparent sm:bg-white p-2 sm:p-4 rounded-lg sm:border sm:border-slate-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Address Lines</h4>
                                 <div className="space-y-2">
                                   {address.lines.map((_, lineIndex) => (
                                     <FormField
@@ -503,9 +500,9 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-white p-4 rounded-lg border border-slate-200">
-                                  <h4 className="text-sm font-medium text-gray-700 mb-3">City</h4>
+                              <div className="grid grid-cols-1 gap-4">
+                                <div className="bg-transparent sm:bg-white p-2 sm:p-4 rounded-lg sm:border sm:border-slate-200">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">City</h4>
                                   <FormField
                                     control={form.control}
                                     name={`addresses.${addressIndex}.city`}
@@ -536,8 +533,8 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                                     )}
                                   />
                                 </div>
-                                <div className="bg-white p-4 rounded-lg border border-slate-200">
-                                  <h4 className="text-sm font-medium text-gray-700 mb-3">Link</h4>
+                                <div className="bg-transparent sm:bg-white p-2 sm:p-4 rounded-lg sm:border sm:border-slate-200">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Link</h4>
                                   <Input
                                     placeholder="Google Link"
                                     value={address.link || ""}
@@ -551,8 +548,8 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                                 </div>
                               </div>
 
-                              <div className="bg-white p-4 rounded-lg border border-slate-200">
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Phone Numbers</h4>
+                              <div className="bg-transparent sm:bg-white p-2 sm:p-4 rounded-lg sm:border sm:border-slate-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Phone Numbers</h4>
                                 <div className="space-y-3">
                                   {address.phoneNumbers.map((phone, phoneIndex) => (
                                     <div key={phoneIndex} className="flex flex-col md:flex-row gap-3">
@@ -636,8 +633,8 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                                 </div>
                               </div>
 
-                              <div className="bg-white p-4 rounded-lg border border-slate-200">
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Email Addresses</h4>
+                              <div className="bg-transparent sm:bg-white p-2 sm:p-4 rounded-lg sm:border sm:border-slate-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Email Addresses</h4>
                                 <div className="space-y-3">
                                   {address.emails.map((email, emailIndex) => (
                                     <div key={emailIndex} className="flex gap-3">
@@ -693,9 +690,9 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                         onClick={() => {
                           field.onChange([...field.value, defaultAddress]);
                         }}
-                        className="w-full mt-4 border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 py-6"
+                        className="w-full mt-4 border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 py-4 sm:py-6"
                       >
-                        <Plus className="h-5 w-5 mr-2" />
+                        <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                         Add Another Location
                       </Button>
                     </div>
@@ -723,7 +720,5 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
             </div>
           </form>
         </Form>
-      </CardContent>
-    </Card>
   );
 }
