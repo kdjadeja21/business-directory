@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { Business } from "@/types/business";
-import { cityUtils, CITIES, CityName } from "@/lib/constants/cities";
 
 export function useBusinessSearch(businesses: Business[]) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,7 +16,9 @@ export function useBusinessSearch(businesses: Business[]) {
   }, [businesses]);
 
   const availableCities = useMemo(() => {
-    const cities = new Set(businesses.map((b) => b.city));
+    const cities = new Set(
+      businesses.flatMap((b) => b.addresses.map((addr) => addr.city))
+    );
     return Array.from(cities).sort();
   }, [businesses]);
 
@@ -29,11 +30,10 @@ export function useBusinessSearch(businesses: Business[]) {
         .trim()
         .includes(searchQuery.toLowerCase().trim());
 
-      // Search in city
-      const matchesCitySearch = business.city
-        .toLowerCase()
-        .trim()
-        .includes(searchQuery.toLowerCase().trim());
+      // Search in cities (across all addresses)
+      const matchesCitySearch = business.addresses.some((address) =>
+        address.city.toLowerCase().trim().includes(searchQuery.toLowerCase().trim())
+      );
 
       // Search in categories
       const matchesCategorySearch = business.categories?.some((category) =>
@@ -44,8 +44,10 @@ export function useBusinessSearch(businesses: Business[]) {
       const matchesSearch =
         matchesName || matchesCitySearch || matchesCategorySearch;
 
-      // Filter by selected city
-      const matchesCity = selectedCity ? business.city === selectedCity : true;
+      // Filter by selected city (across all addresses)
+      const matchesCity = selectedCity 
+        ? business.addresses.some(address => address.city === selectedCity)
+        : true;
 
       // Filter by selected tags/categories
       const matchesTags =

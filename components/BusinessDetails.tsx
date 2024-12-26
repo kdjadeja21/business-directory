@@ -97,10 +97,10 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
               <h1 className="text-4xl font-bold mb-3 text-primary">
                 {business.name}
               </h1>
-              <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
+              {/* <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
                 <MapPin className="h-5 w-5" />
                 <span className="text-lg">{business.city}</span>
-              </div>
+              </div> */}
               <p className="text-muted-foreground mt-3 text-lg break-words overflow-hidden text-ellipsis whitespace-normal max-w-full">
                 {truncateText(business.brief, 51)}
               </p>
@@ -127,43 +127,83 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
           </div>
           <div>
             <h2 className="text-2xl font-semibold mb-4 text-primary">
-              Contact Information
+              Locations & Contact Information
             </h2>
-            <div className="space-y-3">
-              {business.contacts.phones.map((phone, index) => (
-                <div key={index} className="flex items-center gap-3 group">
-                  <Phone className="h-5 w-5 text-primary" />
-                  <a
-                    href={`tel:${phone.countryCode}${phone.number}`}
-                    className="hover:text-primary hover:underline transition-colors text-lg"
-                  >
-                    {phone.number}
-                  </a>
-                  {phone.hasWhatsapp && (
-                    <a
-                      href={generateWhatsAppLink(
-                        phone.countryCode || "+91",
-                        phone.number
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-500 hover:text-green-600 transition-colors"
-                    >
-                      <WhatsAppIcon className="h-5 w-5" />
-                    </a>
-                  )}
-                </div>
-              ))}
-              {business.contacts.emails.map((email, index) => (
-                <div key={index} className="flex items-center gap-3 group">
-                  <Mail className="h-5 w-5 text-primary" />
-                  <a
-                    href={`mailto:${email}`}
-                    className="hover:text-primary hover:underline transition-colors text-lg"
-                  >
-                    {email}
-                  </a>
-                </div>
+            <div className="space-y-6">
+              {business.addresses.map((address, addressIndex) => (
+                <Card key={addressIndex} className="bg-slate-50/50">
+                  <CardContent className="p-6">
+                    {/* Location Header */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      <h3 className="text-lg font-semibold">
+                        {address.city}
+                      </h3>
+                    </div>
+
+                    {/* Address Lines */}
+                    <div className="space-y-1 mb-4 text-muted-foreground">
+                      {address.lines.map((line, lineIndex) => (
+                        <p key={lineIndex}>{line}</p>
+                      ))}
+                    </div>
+
+                    {/* Google Maps Link */}
+                    {address.link && (
+                      <a
+                        href={address.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-4"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        <span className="underline">View on Google Maps</span>
+                      </a>
+                    )}
+
+                    {/* Contact Information */}
+                    <div className="space-y-3 mt-4 border-t pt-4">
+                      {/* Phone Numbers */}
+                      {address.phoneNumbers.map((phone, phoneIndex) => (
+                        <div key={phoneIndex} className="flex items-center gap-3 group">
+                          <Phone className="h-5 w-5 text-primary shrink-0" />
+                          <a
+                            href={`tel:${phone.countryCode}${phone.number}`}
+                            className="hover:text-primary hover:underline transition-colors text-lg"
+                          >
+                            {phone.countryCode} {phone.number}
+                          </a>
+                          {phone.hasWhatsapp && (
+                            <a
+                              href={generateWhatsAppLink(
+                                phone.countryCode,
+                                phone.number
+                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-500 hover:text-green-600 transition-colors"
+                            >
+                              <WhatsAppIcon className="h-5 w-5" />
+                            </a>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Email Addresses */}
+                      {address.emails.map((email, emailIndex) => (
+                        <div key={emailIndex} className="flex items-center gap-3 group">
+                          <Mail className="h-5 w-5 text-primary shrink-0" />
+                          <a
+                            href={`mailto:${email}`}
+                            className="hover:text-primary hover:underline transition-colors text-lg break-all"
+                          >
+                            {email}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

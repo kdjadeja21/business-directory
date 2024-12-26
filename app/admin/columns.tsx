@@ -93,13 +93,19 @@ export const columns: ColumnDef<Business>[] = [
     },
   },
   {
-    accessorKey: "city",
+    accessorKey: "addresses",
     header: "City",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="font-medium">
-        {row.getValue("city")}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const addresses = row.getValue("addresses") as Business["addresses"];
+      const firstAddress = addresses?.[0];
+      return firstAddress?.city ? (
+        <Badge variant="outline" className="font-medium">
+          {firstAddress.city}
+        </Badge>
+      ) : (
+        "N/A"
+      );
+    },
   },
   {
     accessorKey: "categories",
@@ -126,22 +132,23 @@ export const columns: ColumnDef<Business>[] = [
     },
   },
   {
-    accessorKey: "contacts",
+    accessorKey: "addresses",
     header: "Contact",
     cell: ({ row }) => {
-      const contacts = row.getValue("contacts") as Business["contacts"];
+      const addresses = row.getValue("addresses") as Business["addresses"];
+      const firstAddress = addresses?.[0];
       return (
         <div className="space-y-1.5">
           <div className="text-sm flex items-center gap-2">
             <Phone className="h-4 w-4 text-primary" />
             <span className="font-medium">
-              {contacts?.phones?.[0]?.number || "N/A"}
+              {firstAddress?.phoneNumbers?.[0]?.countryCode} {firstAddress?.phoneNumbers?.[0]?.number || "N/A"}
             </span>
           </div>
           <div className="text-sm flex items-center gap-2">
             <Mail className="h-4 w-4 text-primary" />
             <span className="font-medium">
-              {contacts?.emails?.[0] || "N/A"}
+              {firstAddress?.emails?.[0] || "N/A"}
             </span>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Business } from "@/types/business";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,34 +33,54 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Correct import for Select component
-import { countries } from "@/lib/constants/countries"; // Correct import for country codes
+} from "@/components/ui/select";
+import { countries } from "@/lib/constants/countries";
+
+type Timer = ReturnType<typeof setTimeout>;
+type DebouncedFunction = (...args: any[]) => void;
+
+function createDebounce(func: Function, wait: number): DebouncedFunction {
+  let timeout: Timer;
+  
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   brief: z.string().min(10, "Brief description must be at least 10 characters"),
   description: z.string().min(20, "Description must be at least 20 characters"),
-  profilePhoto: z
-    .string()
-    .url("Must be a valid URL")
-    .or(z.string().length(0))
-    .optional(),
-  city: z.string().min(1, "City is required"),
-  categories: z.array(z.string()).min(1, "Category is required"),
-  contacts: z.object({
-    phones: z.array(
-      z.object({
-        number: z
-          .string()
-          .max(10, "Phone number cannot exceed 10 digits")
-          .min(10, "Phone number must be 10 digits"),
-        hasWhatsapp: z.boolean().default(false),
-        countryCode: z.string().optional(),
-      })
-    ),
-    emails: z.array(z.string().email("Must be a valid email")),
-  }),
+  profilePhoto: z.string().url("Must be a valid URL").or(z.string().length(0)).optional(),
+  categories: z.array(z.string()).min(1, "At least one category is required"),
+  addresses: z.array(
+    z.object({
+      lines: z.array(z.string()).min(1, "At least one address line is required").refine(
+        (lines) => lines.every(line => line.length > 0),
+        "Address lines cannot be empty"
+      ),
+      city: z.string().min(1, "City is required"),
+      link: z.string().url("Must be a valid URL").or(z.string().length(0)).optional(),
+      phoneNumbers: z.array(
+        z.object({
+          number: z.string(),
+          countryCode: z.string(),
+          hasWhatsapp: z.boolean(),
+        })
+      ).transform(phones => phones.filter(phone => phone.number.trim() !== '')),
+      emails: z.array(z.string().email("Invalid email format"))
+        .transform(emails => emails.filter(email => email.trim() !== '')),
+    })
+  ).min(1, "At least one address is required"),
 });
+
+type FormSchema = z.infer<typeof formSchema>;
 
 interface BusinessFormProps {
   initialData?: Business;
@@ -73,14 +93,44 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [existingData, setExistingData] = useState<{
+    categories: string[];
+    cities: string[];
+  }>({
+    categories: [...CATEGORIES],
+    cities: [...CITIES],
+  });
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const defaultAddress = {
+    lines: [""],
+    city: "",
+    link: "",
+    phoneNumbers: [{
+      number: "",
+      countryCode: "+91",
+      hasWhatsapp: false
+    }],
+    emails: [""],
+  };
+
+  const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
           ...initialData,
           profilePhoto: initialData.profilePhoto || "",
           categories: initialData.categories || [],
+          addresses: initialData.addresses?.map(address => ({
+            lines: address.lines || [""],
+            city: address.city || "",
+            link: address.link || "",
+            phoneNumbers: address.phoneNumbers?.map(phone => ({
+              number: phone.number || "",
+              countryCode: phone.countryCode || "+91",
+              hasWhatsapp: phone.hasWhatsapp || false
+            })) || [],
+            emails: address.emails || [],
+          })) || [defaultAddress],
         }
       : {
           name: "",
@@ -88,15 +138,32 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
           description: "",
           profilePhoto: "",
           categories: [],
-          city: "",
-          contacts: {
-            phones: [{ countryCode: "+91", number: "", hasWhatsapp: false }],
-            emails: [""],
-          },
+          addresses: [defaultAddress],
         },
+    mode: "onChange",
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      try {
+        const businesses = await businessService.getAll();
+        
+        const categories = new Set(businesses.flatMap(b => b.categories));
+        const cities = new Set(businesses.flatMap(b => b.addresses.map(a => a.city)));
+
+        setExistingData({
+          categories: Array.from(categories).sort(),
+          cities: Array.from(cities).sort(),
+        });
+      } catch (error) {
+        console.error("Failed to fetch existing data:", error);
+      }
+    };
+
+    fetchExistingData();
+  }, []);
+
+  const onSubmit = async (values: FormSchema) => {
     if (!user) {
       toast.error("You must be logged in to perform this action");
       return;
@@ -176,64 +243,44 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
       country.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const debouncedPhoneUpdate = useCallback(
+    createDebounce((addressIndex: number, phoneIndex: number, value: string, field: any) => {
+      const newAddresses = [...field.value];
+      newAddresses[addressIndex].phoneNumbers[phoneIndex].number = value;
+      field.onChange(newAddresses);
+    }, 300),
+    []
+  );
+
+  const debouncedEmailUpdate = useCallback(
+    createDebounce((addressIndex: number, emailIndex: number, value: string, field: any) => {
+      const newAddresses = [...field.value];
+      newAddresses[addressIndex].emails[emailIndex] = value;
+      field.onChange(newAddresses);
+    }, 300),
+    []
+  );
+
   return (
-    <Card className="max-w-4xl mx-auto bg-slate-50 shadow-xl rounded-lg">
-      {/* <CardHeader className="border-b bg-gray-50/50 px-6 py-4">
-        <CardTitle className="text-2xl font-semibold text-gray-800">
-          {isEditing ? "Edit Business Profile" : "Create New Business"}
-        </CardTitle>
-      </CardHeader> */}
-      <CardContent className="p-6">
+    <Card className="max-w-5xl mx-auto bg-white shadow-xl rounded-lg border-0">
+      <CardContent className="p-8">
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-base font-semibold text-gray-900">
                       Business Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter business name"
                         {...field}
-                        className="h-10 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
-                      City
-                    </FormLabel>
-                    <FormControl>
-                      <CreatableSelect
-                        options={CITIES.map((city) => ({
-                          value: city,
-                          label: city,
-                        }))}
-                        value={
-                          field.value
-                            ? {
-                                value: field.value,
-                                label: field.value,
-                              }
-                            : null
-                        }
-                        onChange={(newValue) => {
-                          field.onChange(newValue?.value || "");
-                        }}
-                        className="border-slate-200"
-                        classNamePrefix="react-select"
+                        className="h-12 text-lg border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors bg-white"
                       />
                     </FormControl>
                     <FormMessage className="text-sm text-red-500" />
@@ -344,11 +391,11 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
               name="categories"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categories</FormLabel>
+                  <FormLabel className="text-base font-semibold text-gray-900">Categories</FormLabel>
                   <FormControl>
                     <CreatableSelect
                       isMulti
-                      options={CATEGORIES.map((category) => ({
+                      options={existingData.categories.map((category) => ({
                         value: category,
                         label: category,
                       }))}
@@ -368,212 +415,305 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
               )}
             />
 
-            <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="contacts.phones"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-slate-500" />
-                        Phone Numbers
-                      </div>
-                    </FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        {field.value.map((phone, index) => (
-                          <div
-                            key={index}
-                            className="flex flex-col md:flex-row gap-3 items-center"
-                          >
-                            <Select
-                              value={phone.countryCode || "+91"}
-                              onValueChange={(value) => {
-                                const newPhones = [...field.value];
-                                newPhones[index] = {
-                                  ...newPhones[index],
-                                  countryCode: value,
-                                };
-                                field.onChange(newPhones);
-                              }}
-                            >
-                              <SelectTrigger className="w-full md:w-auto">
-                                <div className="flex items-center gap-2">
-                                  <SelectValue placeholder="Select Country Code" />
+            <FormField
+              control={form.control}
+              name="addresses"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel>Addresses</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      {field.value.map((address, addressIndex) => (
+                        <Card key={addressIndex} className="bg-slate-50/50 border border-slate-200">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                Location {addressIndex + 1}
+                              </h3>
+                              {addressIndex > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  onClick={() => {
+                                    const newAddresses = field.value.filter((_, i) => i !== addressIndex);
+                                    field.onChange(newAddresses);
+                                  }}
+                                  className="bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove Location
+                                </Button>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-6">
+                              <div className="bg-white p-4 rounded-lg border border-slate-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Address Lines</h4>
+                                <div className="space-y-2">
+                                  {address.lines.map((_, lineIndex) => (
+                                    <FormField
+                                      key={lineIndex}
+                                      control={form.control}
+                                      name={`addresses.${addressIndex}.lines.${lineIndex}`}
+                                      render={({ field: lineField }) => (
+                                        <FormItem>
+                                          <FormControl>
+                                            <div className="flex gap-3">
+                                              <Input
+                                                {...lineField}
+                                                placeholder={`Address line ${lineIndex + 1}`}
+                                                className="flex-1"
+                                              />
+                                              {lineIndex > 0 && (
+                                                <Button
+                                                  type="button"
+                                                  variant="destructive"
+                                                  onClick={() => {
+                                                    const newAddresses = [...field.value];
+                                                    newAddresses[addressIndex].lines = newAddresses[addressIndex].lines.filter(
+                                                      (_, i) => i !== lineIndex
+                                                    );
+                                                    field.onChange(newAddresses);
+                                                  }}
+                                                  className="px-3 bg-red-50 hover:bg-red-100 text-red-600 border-red-200"
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                              )}
+                                            </div>
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  ))}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const newAddresses = [...field.value];
+                                      newAddresses[addressIndex].lines.push("");
+                                      field.onChange(newAddresses);
+                                    }}
+                                    className="w-full border-dashed"
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Line
+                                  </Button>
                                 </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <div className="p-2 relative">
-                                  <Input
-                                    type="text"
-                                    placeholder="Search country codes..."
-                                    className="mb-2"
-                                    value={searchTerm}
-                                    onChange={(e) =>
-                                      setSearchTerm(e.target.value)
-                                    }
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-white p-4 rounded-lg border border-slate-200">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-3">City</h4>
+                                  <FormField
+                                    control={form.control}
+                                    name={`addresses.${addressIndex}.city`}
+                                    render={({ field: cityField }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <CreatableSelect
+                                            {...cityField}
+                                            options={existingData.cities.map((city) => ({
+                                              value: city,
+                                              label: city,
+                                            }))}
+                                            onChange={(newValue) => {
+                                              cityField.onChange(newValue?.value || "");
+                                            }}
+                                            value={
+                                              cityField.value
+                                                ? { value: cityField.value, label: cityField.value }
+                                                : null
+                                            }
+                                            placeholder="Select or enter city"
+                                            className="border-slate-200"
+                                            classNamePrefix="react-select"
+                                          />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
                                   />
                                 </div>
-                                {filteredCountries.map((country) => (
-                                  <SelectItem
-                                    key={country.name}
-                                    value={country.code}
-                                    className="flex items-center justify-between"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      {country.code} - {country.name}
+                                <div className="bg-white p-4 rounded-lg border border-slate-200">
+                                  <h4 className="text-sm font-medium text-gray-700 mb-3">Link</h4>
+                                  <Input
+                                    placeholder="Google Link"
+                                    value={address.link || ""}
+                                    onChange={(e) => {
+                                      const newAddresses = [...field.value];
+                                      newAddresses[addressIndex].link = e.target.value;
+                                      field.onChange(newAddresses);
+                                    }}
+                                    className="border-slate-200"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="bg-white p-4 rounded-lg border border-slate-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Phone Numbers</h4>
+                                <div className="space-y-3">
+                                  {address.phoneNumbers.map((phone, phoneIndex) => (
+                                    <div key={phoneIndex} className="flex flex-col md:flex-row gap-3">
+                                      <Select
+                                        value={phone.countryCode}
+                                        onValueChange={(value) => {
+                                          const newAddresses = [...field.value];
+                                          newAddresses[addressIndex].phoneNumbers[phoneIndex].countryCode = value;
+                                          field.onChange(newAddresses);
+                                        }}
+                                      >
+                                        <SelectTrigger className="w-[120px]">
+                                          <SelectValue placeholder="Code" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {filteredCountries.map((country) => (
+                                            <SelectItem key={country.flag} value={country.code}>
+                                              <div className="flex items-center gap-2">
+                                                {country.flag} {country.code}
+                                              </div>
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <Input
+                                        placeholder="Enter 10-digit phone number"
+                                        defaultValue={phone.number}
+                                        onChange={(e) => {
+                                          debouncedPhoneUpdate(addressIndex, phoneIndex, e.target.value, field);
+                                        }}
+                                        className="flex-1 border-slate-200"
+                                        maxLength={10}
+                                      />
+                                      <div className="flex items-center gap-2 w-[140px]">
+                                        <Switch
+                                          checked={phone.hasWhatsapp}
+                                          onCheckedChange={(checked) => {
+                                            const newAddresses = [...field.value];
+                                            newAddresses[addressIndex].phoneNumbers[phoneIndex].hasWhatsapp = checked;
+                                            field.onChange(newAddresses);
+                                          }}
+                                          className="data-[state=checked]:bg-green-400 data-[state=checked]:hover:bg-green-500"
+                                        />
+                                        <label className="text-sm text-gray-600">WhatsApp?</label>
+                                      </div>
+                                      {phoneIndex > 0 && (
+                                        <Button
+                                          type="button"
+                                          variant="destructive"
+                                          onClick={() => {
+                                            const newAddresses = [...field.value];
+                                            newAddresses[addressIndex].phoneNumbers = newAddresses[addressIndex].phoneNumbers.filter(
+                                              (_, i) => i !== phoneIndex
+                                            );
+                                            field.onChange(newAddresses);
+                                          }}
+                                          className="px-3 bg-red-600 hover:bg-red-700"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      )}
                                     </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              placeholder="Enter 10-digit phone number"
-                              value={phone.number}
-                              onChange={(e) => {
-                                const newPhones = [...field.value];
-                                newPhones[index] = {
-                                  ...newPhones[index],
-                                  number: e.target.value,
-                                };
-                                field.onChange(newPhones);
-                              }}
-                              className="flex-1 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                              maxLength={10}
-                            />
-                            <div className="flex items-center gap-2 min-w-[140px]">
-                              <Switch
-                                id={`whatsapp-${index}`}
-                                checked={phone.hasWhatsapp}
-                                onCheckedChange={(checked) => {
-                                  const newPhones = [...field.value];
-                                  newPhones[index] = {
-                                    ...newPhones[index],
-                                    hasWhatsapp: checked,
-                                  };
-                                  field.onChange(newPhones);
-                                }}
-                                className="data-[state=checked]:bg-green-400 data-[state=checked]:hover:bg-green-500"
-                              />
-                              <label
-                                htmlFor={`whatsapp-${index}`}
-                                className="text-sm text-gray-600"
-                              >
-                                Has WhatsApp?
-                              </label>
+                                  ))}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const newAddresses = [...field.value];
+                                      newAddresses[addressIndex].phoneNumbers.push({
+                                        number: "",
+                                        countryCode: "+91",
+                                        hasWhatsapp: false,
+                                      });
+                                      field.onChange(newAddresses);
+                                    }}
+                                    className="w-full border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50"
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Phone Number
+                                  </Button>
+                                </div>
+                              </div>
+
+                              <div className="bg-white p-4 rounded-lg border border-slate-200">
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Email Addresses</h4>
+                                <div className="space-y-3">
+                                  {address.emails.map((email, emailIndex) => (
+                                    <div key={emailIndex} className="flex gap-3">
+                                      <Input
+                                        type="email"
+                                        placeholder="Enter email address"
+                                        defaultValue={email}
+                                        onChange={(e) => {
+                                          debouncedEmailUpdate(addressIndex, emailIndex, e.target.value, field);
+                                        }}
+                                        className="flex-1 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                      />
+                                      {emailIndex > 0 && (
+                                        <Button
+                                          type="button"
+                                          variant="destructive"
+                                          onClick={() => {
+                                            const newAddresses = [...field.value];
+                                            newAddresses[addressIndex].emails = newAddresses[addressIndex].emails.filter(
+                                              (_, i) => i !== emailIndex
+                                            );
+                                            field.onChange(newAddresses);
+                                          }}
+                                          className="px-3 bg-red-600 hover:bg-red-700"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  ))}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const newAddresses = [...field.value];
+                                      newAddresses[addressIndex].emails.push("");
+                                      field.onChange(newAddresses);
+                                    }}
+                                    className="w-full border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50"
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Email Address
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
-                            {index > 0 && (
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={() => {
-                                  const newPhones = field.value.filter(
-                                    (_, i) => i !== index
-                                  );
-                                  field.onChange(newPhones);
-                                }}
-                                className="px-3 bg-red-600 hover:bg-red-700 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() =>
-                            field.onChange([
-                              ...field.value,
-                              {
-                                countryCode: "+91",
-                                number: "",
-                                hasWhatsapp: false,
-                              },
-                            ])
-                          }
-                          className="w-full border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 transition-colors"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Phone Number
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500" />
-                  </FormItem>
-                )}
-              />
+                          </CardContent>
+                        </Card>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          field.onChange([...field.value, defaultAddress]);
+                        }}
+                        className="w-full mt-4 border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 py-6"
+                      >
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Another Location
+                      </Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="contacts.emails"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-slate-500" />
-                        Email Addresses
-                      </div>
-                    </FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        {field.value.map((_, index) => (
-                          <div key={index} className="flex gap-3">
-                            <Input
-                              placeholder="Enter email address"
-                              type="email"
-                              value={field.value[index]}
-                              onChange={(e) => {
-                                const newEmails = [...field.value];
-                                newEmails[index] = e.target.value;
-                                field.onChange(newEmails);
-                              }}
-                              className="flex-1 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                            />
-                            {index > 0 && (
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={() => {
-                                  const newEmails = field.value.filter(
-                                    (_, i) => i !== index
-                                  );
-                                  field.onChange(newEmails);
-                                }}
-                                className="px-3 bg-red-600 hover:bg-red-700 transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => field.onChange([...field.value, ""])}
-                          className="w-full border-dashed border-slate-300 hover:border-indigo-500 hover:bg-indigo-50 transition-colors"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Email Address
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500" />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end pt-6 border-t">
+            <div className="flex justify-end pt-8 border-t">
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-w-[150px] bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+                className="min-w-[200px] bg-indigo-600 hover:bg-indigo-700 text-white transition-colors py-6"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     {isEditing ? "Updating..." : "Creating..."}
                   </>
                 ) : (

@@ -5,15 +5,17 @@ export interface Business {
   description: string;
   profilePhoto?: string | null;
   categories: string[];
-  city: string;
-  contacts: {
-    phones: Array<{
-      countryCode?: string;
+  addresses: {
+    lines: string[];
+    city: string;
+    link?: string;
+    phoneNumbers: Array<{
       number: string;
+      countryCode: string;
       hasWhatsapp: boolean;
     }>;
     emails: string[];
-  };
+  }[];
   createdAt: string;
   updatedAt: string;
   user_id: string;

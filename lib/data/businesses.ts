@@ -10,46 +10,54 @@ export const dummyBusinesses: Business[] = [
     profilePhoto:
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab",
     categories: ["Technology", "Consulting", "Software"],
-    city: "San Francisco",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 123-4567", hasWhatsapp: true },
-        { number: "+1 (555) 123-4568", hasWhatsapp: false },
-        { number: "+1 (555) 123-4569", hasWhatsapp: false },
-      ],
-      emails: [
-        "contact@techsolutions.com",
-        "support@techsolutions.com",
-        "sales@techsolutions.com",
-      ],
-    },
+    addresses: [
+      {
+        lines: ["123 Tech Street", "Floor 5"],
+        city: "San Francisco",
+        link: "https://goo.gl/maps/tech123",
+        phoneNumbers: [
+          { number: "5551234567", countryCode: "+1", hasWhatsapp: true },
+          { number: "5551234568", countryCode: "+1", hasWhatsapp: false },
+          { number: "5551234569", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: [
+          "contact@techsolutions.com",
+          "support@techsolutions.com", 
+          "sales@techsolutions.com"
+        ]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "1",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
-    id: "2",
+    id: "2", 
     name: "Green Earth Landscaping",
     brief: "Professional landscaping and garden maintenance",
     description: "Creating beautiful outdoor spaces for homes and businesses",
     profilePhoto:
       "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae",
     categories: ["Landscaping", "Garden", "Maintenance"],
-    city: "Portland",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 987-6543", hasWhatsapp: true },
-        { number: "+1 (555) 987-6544", hasWhatsapp: false },
-      ],
-      emails: ["info@greenearth.com", "projects@greenearth.com"],
-    },
+    addresses: [
+      {
+        lines: ["456 Garden Way"],
+        city: "Portland",
+        link: "https://goo.gl/maps/garden456",
+        phoneNumbers: [
+          { number: "5559876543", countryCode: "+1", hasWhatsapp: true },
+          { number: "5559876544", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: ["info@greenearth.com", "projects@greenearth.com"]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "2",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "3",
@@ -60,23 +68,27 @@ export const dummyBusinesses: Business[] = [
     profilePhoto:
       "https://images.unsplash.com/photo-1466637574441-749b8f19452f",
     categories: ["Food & Beverage", "Catering", "Events"],
-    city: "New York",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 234-5678", hasWhatsapp: true },
-        { number: "+1 (555) 234-5679", hasWhatsapp: false },
-      ],
-      emails: [
-        "events@culinarydelights.com",
-        "bookings@culinarydelights.com",
-        "info@culinarydelights.com",
-      ],
-    },
+    addresses: [
+      {
+        lines: ["789 Food Court", "Suite 101"],
+        city: "New York",
+        link: "https://goo.gl/maps/food789",
+        phoneNumbers: [
+          { number: "5552345678", countryCode: "+1", hasWhatsapp: true },
+          { number: "5552345679", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: [
+          "events@culinarydelights.com",
+          "bookings@culinarydelights.com",
+          "info@culinarydelights.com"
+        ]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "3",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "4",
@@ -86,19 +98,23 @@ export const dummyBusinesses: Business[] = [
       "Full-service design studio specializing in brand identity and digital media",
     profilePhoto: "https://images.unsplash.com/photo-1561070791-2526d30994b5",
     categories: ["Design", "Branding", "Marketing"],
-    city: "Los Angeles",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 345-6789", hasWhatsapp: true },
-        { number: "+1 (555) 345-6780", hasWhatsapp: false },
-      ],
-      emails: ["create@designstudio.com", "projects@designstudio.com"],
-    },
+    addresses: [
+      {
+        lines: ["321 Design Boulevard"],
+        city: "Los Angeles", 
+        link: "https://goo.gl/maps/design321",
+        phoneNumbers: [
+          { number: "5553456789", countryCode: "+1", hasWhatsapp: true },
+          { number: "5553456780", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: ["create@designstudio.com", "projects@designstudio.com"]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "4",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "5",
@@ -108,24 +124,28 @@ export const dummyBusinesses: Business[] = [
       "Comprehensive wellness programs including yoga, meditation, and nutrition counseling",
     profilePhoto: "https://images.unsplash.com/photo-1545205597-3d9d02c29597",
     categories: ["Health", "Wellness", "Fitness"],
-    city: "Seattle",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 456-7890", hasWhatsapp: true },
-        { number: "+1 (555) 456-7891", hasWhatsapp: false },
-        { number: "+1 (555) 456-7892", hasWhatsapp: false },
-      ],
-      emails: [
-        "info@wellnesscenter.com",
-        "appointments@wellnesscenter.com",
-        "classes@wellnesscenter.com",
-      ],
-    },
+    addresses: [
+      {
+        lines: ["555 Wellness Way", "Building A"],
+        city: "Seattle",
+        link: "https://goo.gl/maps/wellness555",
+        phoneNumbers: [
+          { number: "5554567890", countryCode: "+1", hasWhatsapp: true },
+          { number: "5554567891", countryCode: "+1", hasWhatsapp: false },
+          { number: "5554567892", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: [
+          "info@wellnesscenter.com",
+          "appointments@wellnesscenter.com",
+          "classes@wellnesscenter.com"
+        ]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "5",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "6",
@@ -136,19 +156,23 @@ export const dummyBusinesses: Business[] = [
     profilePhoto:
       "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40",
     categories: ["Finance", "Investment", "Planning"],
-    city: "Chicago",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 567-8901", hasWhatsapp: true },
-        { number: "+1 (555) 567-8902", hasWhatsapp: false },
-      ],
-      emails: ["plan@financialadvisors.com", "invest@financialadvisors.com"],
-    },
+    addresses: [
+      {
+        lines: ["777 Finance Street", "20th Floor"],
+        city: "Chicago",
+        link: "https://goo.gl/maps/finance777",
+        phoneNumbers: [
+          { number: "5555678901", countryCode: "+1", hasWhatsapp: true },
+          { number: "5555678902", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: ["plan@financialadvisors.com", "invest@financialadvisors.com"]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "6",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "7",
@@ -158,24 +182,28 @@ export const dummyBusinesses: Business[] = [
       "Commercial and residential construction with a focus on sustainability",
     profilePhoto: "https://images.unsplash.com/photo-1503387762-592deb58ef4e",
     categories: ["Construction", "Development", "Architecture"],
-    city: "Boston",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 678-9012", hasWhatsapp: true },
-        { number: "+1 (555) 678-9013", hasWhatsapp: false },
-        { number: "+1 (555) 678-9014", hasWhatsapp: false },
-      ],
-      emails: [
-        "build@urbanconstruction.com",
-        "projects@urbanconstruction.com",
-        "quotes@urbanconstruction.com",
-      ],
-    },
+    addresses: [
+      {
+        lines: ["888 Builder Avenue"],
+        city: "Boston",
+        link: "https://goo.gl/maps/builder888",
+        phoneNumbers: [
+          { number: "5556789012", countryCode: "+1", hasWhatsapp: true },
+          { number: "5556789013", countryCode: "+1", hasWhatsapp: false },
+          { number: "5556789014", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: [
+          "build@urbanconstruction.com",
+          "projects@urbanconstruction.com",
+          "quotes@urbanconstruction.com"
+        ]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "7",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "8",
@@ -186,19 +214,23 @@ export const dummyBusinesses: Business[] = [
     profilePhoto:
       "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
     categories: ["Marketing", "Digital", "SEO"],
-    city: "Austin",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 789-0123", hasWhatsapp: true },
-        { number: "+1 (555) 789-0124", hasWhatsapp: false },
-      ],
-      emails: ["grow@digitalmarketingpro.com", "seo@digitalmarketingpro.com"],
-    },
+    addresses: [
+      {
+        lines: ["999 Digital Drive"],
+        city: "Austin",
+        link: "https://goo.gl/maps/digital999",
+        phoneNumbers: [
+          { number: "5557890123", countryCode: "+1", hasWhatsapp: true },
+          { number: "5557890124", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: ["grow@digitalmarketingpro.com", "seo@digitalmarketingpro.com"]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "8",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "9",
@@ -209,23 +241,27 @@ export const dummyBusinesses: Business[] = [
     profilePhoto:
       "https://images.unsplash.com/photo-1516734212186-65266f46771f",
     categories: ["Pet Care", "Grooming", "Veterinary"],
-    city: "Denver",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 890-1234", hasWhatsapp: true },
-        { number: "+1 (555) 890-1235", hasWhatsapp: false },
-      ],
-      emails: [
-        "care@petcareplus.com",
-        "appointments@petcareplus.com",
-        "emergency@petcareplus.com",
-      ],
-    },
+    addresses: [
+      {
+        lines: ["444 Pet Place"],
+        city: "Denver",
+        link: "https://goo.gl/maps/pet444",
+        phoneNumbers: [
+          { number: "5558901234", countryCode: "+1", hasWhatsapp: true },
+          { number: "5558901235", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: [
+          "care@petcareplus.com",
+          "appointments@petcareplus.com",
+          "emergency@petcareplus.com"
+        ]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "9",
     createdBy: "admin",
-    updatedBy: "admin",
+    updatedBy: "admin"
   },
   {
     id: "10",
@@ -235,23 +271,27 @@ export const dummyBusinesses: Business[] = [
     profilePhoto:
       "https://images.unsplash.com/photo-1589829545856-d10d557cf95f",
     categories: ["Legal", "Corporate", "Consulting"],
-    city: "Miami",
-    contacts: {
-      phones: [
-        { number: "+1 (555) 901-2345", hasWhatsapp: true },
-        { number: "+1 (555) 901-2346", hasWhatsapp: false },
-        { number: "+1 (555) 901-2347", hasWhatsapp: false },
-      ],
-      emails: [
-        "contact@legalsolutions.com",
-        "cases@legalsolutions.com",
-        "consult@legalsolutions.com",
-      ],
-    },
+    addresses: [
+      {
+        lines: ["222 Law Circle", "Suite 1500"],
+        city: "Miami",
+        link: "https://goo.gl/maps/law222",
+        phoneNumbers: [
+          { number: "5559012345", countryCode: "+1", hasWhatsapp: true },
+          { number: "5559012346", countryCode: "+1", hasWhatsapp: false },
+          { number: "5559012347", countryCode: "+1", hasWhatsapp: false }
+        ],
+        emails: [
+          "contact@legalsolutions.com",
+          "cases@legalsolutions.com",
+          "consult@legalsolutions.com"
+        ]
+      }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     user_id: "10",
     createdBy: "admin",
-    updatedBy: "admin",
-  },
+    updatedBy: "admin"
+  }
 ];

@@ -14,8 +14,9 @@ interface BusinessCardProps {
 }
 
 export function BusinessCard({ business, index }: BusinessCardProps) {
-  const primaryPhone = business.contacts.phones[0];
-  const primaryEmail = business.contacts.emails[0];
+  const firstAddress = business.addresses[0];
+  const primaryPhone = firstAddress?.phoneNumbers?.[0];
+  const primaryEmail = firstAddress?.emails?.[0];
   const briefDescription = business.brief || "No description available";
   const truncatedDescription =
     briefDescription.length > 21
@@ -48,7 +49,7 @@ export function BusinessCard({ business, index }: BusinessCardProps) {
             <h3 className="text-2xl font-bold">{business.name}</h3>
             <div className="flex items-center gap-2 text-muted-foreground mt-1">
               <MapPin className="h-4 w-4" />
-              <span>{business.city}</span>
+              <span>{firstAddress?.city || "N/A"}</span>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {business.categories.map((category) => (
@@ -69,7 +70,7 @@ export function BusinessCard({ business, index }: BusinessCardProps) {
             {primaryPhone && (
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>{primaryPhone.number}</span>
+                <span>{primaryPhone.countryCode} {primaryPhone.number}</span>
               </div>
             )}
             {primaryEmail && (

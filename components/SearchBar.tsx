@@ -40,11 +40,10 @@ export function SearchBar({
 
   // Combine constant cities and dynamic cities, prioritizing available cities
   const allCities = useMemo(() => {
-    const constCities = Array.from(CITIES);
     const dynamicCities = Array.from(new Set(availableCities));
     // Remove duplicates by creating a Set from the combined array
     const uniqueCities = Array.from(
-      new Set([...constCities, ...dynamicCities])
+      new Set([...dynamicCities])
     );
 
     // Sort cities with available ones first, then alphabetically
