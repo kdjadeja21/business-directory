@@ -13,9 +13,11 @@ import {
   DocumentData,
   QuerySnapshot,
   DocumentReference,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Business } from "@/types/business";
+import { revalidatePath } from 'next/cache';
 
 const COLLECTION_NAME = "businesses";
 
@@ -81,13 +83,19 @@ export const businessService = {
   // Update a business
   async update(id: string, data: Partial<Business>): Promise<void> {
     try {
-      const docRef = doc(db, COLLECTION_NAME, id);
-      await updateDoc(docRef, {
+      const businessRef = doc(db, 'businesses', id);
+      await updateDoc(businessRef, {
         ...data,
-        updatedAt: new Date(),
+        updatedAt: serverTimestamp(),
       });
+      
+      // Revalidate relevant paths
+      revalidatePath('/admin');
+      revalidatePath(`/business/${id}`);
+      revalidatePath(`/profilecard/${id}`);
+      revalidatePath('/');
     } catch (error) {
-      console.error("Error updating business:", error);
+      console.error('Error updating business:', error);
       throw error;
     }
   },

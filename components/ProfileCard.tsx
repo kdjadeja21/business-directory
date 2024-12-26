@@ -17,7 +17,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ business }: ProfileCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [hasFlipped, setHasFlipped] = useState(false); // New state to track if the card has flipped once
+  const [hasFlipped, setHasFlipped] = useState(false);
   const router = useRouter();
   const profileUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ""}/profilecard/${
     business.id
@@ -27,10 +27,10 @@ export function ProfileCard({ business }: ProfileCardProps) {
     if (!hasFlipped) {
       const timer = setTimeout(() => {
         setIsFlipped(true);
-        setHasFlipped(true); // Set to true after the first flip
+        setHasFlipped(true);
       }, 1500);
 
-      return () => clearTimeout(timer); // Cleanup the timer
+      return () => clearTimeout(timer);
     }
   }, [hasFlipped]);
 
@@ -81,7 +81,7 @@ export function ProfileCard({ business }: ProfileCardProps) {
                 transform: "rotateY(180deg)",
               }}
             >
-              <Card className="p-8 h-full flex flex-col items-center justify-between hover:shadow-lg transition-shadow relative">
+              <Card className="p-8 flex flex-col items-center gap-6 hover:shadow-lg transition-shadow relative">
                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Rotate3D className="h-5 w-5 text-muted-foreground animate-pulse" />
                 </div>
@@ -119,12 +119,14 @@ export function ProfileCard({ business }: ProfileCardProps) {
         </div>
       </div>
 
-      <Button
-        className="mt-8 px-8 shadow-lg hover:shadow-xl transition-all"
-        onClick={() => router.push(`/business/${business.id}`)}
-      >
-        Visit Full Profile
-      </Button>
+      <div className="sticky bottom-8 w-full max-w-md mt-8">
+        <Button
+          className="w-full px-8 shadow-lg hover:shadow-xl transition-all"
+          onClick={() => router.push(`/business/${business.id}`)}
+        >
+          Visit Full Profile
+        </Button>
+      </div>
     </div>
   );
 }
