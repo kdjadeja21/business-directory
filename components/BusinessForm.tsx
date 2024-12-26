@@ -181,7 +181,6 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
 
       if (isEditing && initialData?.id) {
         await businessService.update(initialData.id, businessData);
-        router.refresh();
         toast.success("Business updated successfully!");
       } else {
         await businessService.create(businessData);

@@ -83,19 +83,13 @@ export const businessService = {
   // Update a business
   async update(id: string, data: Partial<Business>): Promise<void> {
     try {
-      const businessRef = doc(db, 'businesses', id);
-      await updateDoc(businessRef, {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
         ...data,
-        updatedAt: serverTimestamp(),
+        updatedAt: new Date(),
       });
-      
-      // Revalidate relevant paths
-      revalidatePath('/admin');
-      revalidatePath(`/business/${id}`);
-      revalidatePath(`/profilecard/${id}`);
-      revalidatePath('/');
     } catch (error) {
-      console.error('Error updating business:', error);
+      console.error("Error updating business:", error);
       throw error;
     }
   },
