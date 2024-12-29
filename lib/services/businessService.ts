@@ -83,11 +83,29 @@ export const businessService = {
   // Update a business
   async update(id: string, data: Partial<Business>): Promise<void> {
     try {
+      // Remove id from data to avoid overwriting document ID
+      const { id: _, ...updateData } = data;
+
+      // Get current document data
       const docRef = doc(db, COLLECTION_NAME, id);
-      await updateDoc(docRef, {
-        ...data,
-        updatedAt: new Date(),
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error("Document does not exist");
+      }
+
+      // Only update if data has changed
+      const currentData = docSnap.data();
+      const hasChanges = Object.entries(updateData).some(([key, value]) => {
+        return JSON.stringify(currentData[key]) !== JSON.stringify(value);
       });
+
+      if (hasChanges) {
+        await updateDoc(docRef, {
+          ...updateData,
+          updatedAt: serverTimestamp(),
+        });
+      }
     } catch (error) {
       console.error("Error updating business:", error);
       throw error;
