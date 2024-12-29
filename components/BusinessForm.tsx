@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Phone, Mail, Plus, Trash2, Upload } from "lucide-react";
+import { Loader2, Phone, Mail, Plus, Trash2 } from "lucide-react";
 import { CITIES } from "@/lib/constants/cities";
 import Image from "next/image";
 import { CATEGORIES } from "@/lib/constants/categories";
@@ -65,7 +65,7 @@ const formSchema = z.object({
         (lines) => lines.every(line => line.length > 0),
         "Address lines cannot be empty"
       ),
-      city: z.string().min(1, "City is required"),
+      city: z.string().min(1, "City is required").transform(val => val?.trim()),
       link: z.string().url("Must be a valid URL").or(z.string().length(0)).optional(),
       phoneNumbers: z.array(
         z.object({
@@ -90,7 +90,6 @@ interface BusinessFormProps {
 export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [existingData, setExistingData] = useState<{
@@ -196,47 +195,6 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.includes("image")) {
-      toast.error("Please upload an image file");
-      return;
-    }
-
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size must be less than 5MB");
-      return;
-    }
-
-    setUploadingPhoto(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-
-      const { url } = await response.json();
-      form.setValue("profilePhoto", url);
-      toast.success("Photo uploaded successfully");
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload photo. Please try again.");
-    } finally {
-      setUploadingPhoto(false);
-      e.target.value = "";
-    }
-  };
-
   const filteredCountries = countries.filter(
     (country) =>
       country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -333,7 +291,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium text-gray-700">
-                    Profile Photo (Optional)
+                    Profile Photo URL (Optional)
                   </FormLabel>
                   <div className="space-y-4">
                     {field.value && (
@@ -345,38 +303,14 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                         className="object-cover rounded-lg"
                       />
                     )}
-                    <div className="flex gap-4">
-                      <FormControl>
-                        <Input
-                          placeholder="https://example.com/photo.jpg"
-                          {...field}
-                          value={field.value || ""}
-                          type="url"
-                          className="h-10 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors"
-                        />
-                      </FormControl>
-                      <div className="relative">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoUpload}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={uploadingPhoto}
-                          className="h-10 border-slate-200 hover:bg-slate-100"
-                        >
-                          {uploadingPhoto ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Upload className="h-4 w-4" />
-                          )}
-                          <span className="ml-2">Upload</span>
-                        </Button>
-                      </div>
-                    </div>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter image URL"
+                        {...field}
+                        type="url"
+                        className="h-10 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-colors"
+                      />
+                    </FormControl>
                   </div>
                   <FormMessage className="text-sm text-red-500" />
                 </FormItem>
@@ -517,6 +451,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                                             }))}
                                             onChange={(newValue) => {
                                               cityField.onChange(newValue?.value || "");
+                                              form.trigger(`addresses.${addressIndex}.city`);
                                             }}
                                             value={
                                               cityField.value
