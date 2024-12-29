@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { Suspense } from "react";
 import { businessService } from "@/lib/services/businessService";
 import { BusinessDetails } from "@/components/BusinessDetails";
@@ -29,9 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BusinessPage({
   params,
-}: {
-  params: { id: string };
-}) {
+}: Props) {
   const business = await businessService.getById(params.id);
 
   if (!business) {
