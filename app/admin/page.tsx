@@ -15,6 +15,7 @@ import {
   Search,
   Filter,
   LogOut,
+  FileSpreadsheet,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { businessService } from "@/lib/services/businessService";
@@ -33,12 +34,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BulkUploadDialog } from "@/components/BulkUploadDialog";
 
 export default function AdminPage() {
   const router = useRouter();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [businessToDelete, setBusinessToDelete] = useState<string | null>(null);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
   const pathname = usePathname();
 
@@ -101,6 +104,19 @@ export default function AdminPage() {
     };
   }, []);
 
+  const handleBulkDelete = async (selectedBusinesses: Business[]) => {
+    try {
+      for (const business of selectedBusinesses) {
+        await businessService.delete(business.id);
+      }
+      toast.success(`Successfully deleted ${selectedBusinesses.length} businesses`);
+      fetchBusinesses();
+    } catch (error) {
+      console.error('Error deleting businesses:', error);
+      toast.error("Failed to delete businesses");
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto py-12 px-6">
@@ -134,6 +150,14 @@ export default function AdminPage() {
             <span className="relative inline-block">Add New Business</span>
           </Button>
           <Button
+            variant="outline"
+            onClick={() => setBulkUploadOpen(true)}
+            className="border-indigo-200 hover:bg-indigo-50"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Add Bulk Records
+          </Button>
+          <Button
             onClick={handleLogout}
             variant="outline"
             size="lg"
@@ -148,6 +172,7 @@ export default function AdminPage() {
       <DataTable
         columns={columns}
         data={businesses}
+        onDeleteSelected={handleBulkDelete}
       />
 
       <AlertDialog
@@ -173,6 +198,11 @@ export default function AdminPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BulkUploadDialog 
+        open={bulkUploadOpen} 
+        onOpenChange={setBulkUploadOpen}
+      />
     </div>
   );
 }
