@@ -99,7 +99,7 @@ export function ProfileCard({ business }: ProfileCardProps) {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2 justify-center">
-                    {business.categories.map((category) => (
+                    {business.categories.slice(0, 2).map((category) => (
                       <Badge
                         key={category}
                         variant="secondary"
@@ -108,6 +108,11 @@ export function ProfileCard({ business }: ProfileCardProps) {
                         {category}
                       </Badge>
                     ))}
+                    {business.categories.length > 2 && (
+                      <Badge variant="outline" className="text-xs bg-slate-50 border-primary/20">
+                        +{business.categories.length - 2} more
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">

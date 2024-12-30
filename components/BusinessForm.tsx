@@ -641,15 +641,27 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-w-[200px] bg-indigo-600 hover:bg-indigo-700 text-white transition-colors py-6"
+                className="w-full sm:w-[200px] md:w-[250px] lg:w-[300px] bg-indigo-600 hover:bg-indigo-700 text-white transition-colors py-4 sm:py-6 text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    {isEditing ? "Updating..." : "Creating..."}
+                    <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                    <span className="hidden sm:inline">
+                      {isEditing ? "Updating..." : "Creating..."}
+                    </span>
+                    <span className="sm:hidden">
+                      {isEditing ? "Update..." : "Create..."}
+                    </span>
                   </>
                 ) : (
-                  <>{isEditing ? "Update Business" : "Create Business"}</>
+                  <>
+                    <span className="hidden sm:inline">
+                      {isEditing ? "Update Business" : "Create Business"}
+                    </span>
+                    <span className="sm:hidden">
+                      {isEditing ? "Update" : "Create"}
+                    </span>
+                  </>
                 )}
               </Button>
             </div>

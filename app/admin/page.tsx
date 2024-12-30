@@ -140,30 +140,31 @@ export default function AdminPage() {
             Manage and monitor your business listings
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Button
             onClick={() => router.push("/admin/new")}
             size="lg"
-            className="shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg"
+            className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-lg"
           >
-            <Plus className="mr-2.5 h-5 w-5 animate-pulse" />
-            <span className="relative inline-block">Add New Business</span>
+            <Plus className="mr-2.5 h-5 w-5" />
+            <span>Add New Business</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => setBulkUploadOpen(true)}
-            className="border-indigo-200 hover:bg-indigo-50"
+            size="lg"
+            className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200 border-primary/20 hover:bg-primary/5"
           >
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            <FileSpreadsheet className="h-5 w-5 mr-2.5" />
             Add Bulk Records
           </Button>
           <Button
             onClick={handleLogout}
             variant="outline"
             size="lg"
-            className="shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200 border-primary/20 hover:bg-primary/5"
           >
-            <LogOut className="mr-2 h-5 w-5" />
+            <LogOut className="h-5 w-5 mr-2.5" />
             Logout
           </Button>
         </div>

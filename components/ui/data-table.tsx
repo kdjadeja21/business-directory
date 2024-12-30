@@ -72,13 +72,15 @@ export function DataTable<TData, TValue>({
           </Button>
         </div>
       )}
-      
+
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete {selectedRows.length} selected businesses and remove all associated data from our servers.
+              This action cannot be undone. This will permanently delete{" "}
+              {selectedRows.length} selected businesses and remove all
+              associated data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -86,7 +88,7 @@ export function DataTable<TData, TValue>({
             <AlertDialogAction
               onClick={() => {
                 if (onDeleteSelected) {
-                  onDeleteSelected(selectedRows.map(row => row.original));
+                  onDeleteSelected(selectedRows.map((row) => row.original));
                 }
                 setRowSelection({});
                 setShowDeleteDialog(false);
@@ -98,7 +100,7 @@ export function DataTable<TData, TValue>({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -107,20 +109,34 @@ export function DataTable<TData, TValue>({
                 <div className="h-12 flex items-center justify-center">
                   <Checkbox
                     checked={table.getIsAllRowsSelected()}
-                    onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
+                    onCheckedChange={(value) =>
+                      table.toggleAllRowsSelected(!!value)
+                    }
                     aria-label="Select all"
                   />
                 </div>
               </TableHead>
-              {table.getAllColumns().map((column) => (
+              {/* {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))} */}
+              {/* {table.getAllColumns().map((column) => (
                 <TableHead key={column.id}>
-                  {/* {flexRender(column.columnDef.header, {
-                    header: column.getContext().header,
-                    column: column.getContext().column,
-                    table: column.getContext().table,
-                  })} */}
+                  {flexRender(column.columnDef.header, column.getContext())}
                 </TableHead>
-              ))}
+              ))} */}
             </TableRow>
           </TableHeader>
           <TableBody>

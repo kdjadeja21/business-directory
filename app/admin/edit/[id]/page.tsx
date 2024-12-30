@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { businessService } from "@/lib/services/businessService";
 import { EditBusinessForm } from "@/components/EditBusinessForm";
 
