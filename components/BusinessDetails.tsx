@@ -45,7 +45,7 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      toast.error("Failed to share profile card");
+      // toast.error("Failed to share profile card");
     }
   };
 

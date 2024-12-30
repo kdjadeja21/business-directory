@@ -203,6 +203,7 @@ export default function AdminPage() {
       <BulkUploadDialog 
         open={bulkUploadOpen} 
         onOpenChange={setBulkUploadOpen}
+        onSuccess={fetchBusinesses}
       />
     </div>
   );

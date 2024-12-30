@@ -56,7 +56,8 @@ function ActionCell({ row }: { row: any }) {
 export const columns: ColumnDef<Business>[] = [
   {
     accessorKey: "name",
-    header: "Business",
+    header: "Business Name",
+    enableColumnFilter: true,
     cell: ({ row }) => {
       const business = row.original;
       const briefDescription = business.brief || "No description available";
@@ -95,6 +96,7 @@ export const columns: ColumnDef<Business>[] = [
   {
     accessorKey: "addresses",
     header: "City",
+    enableColumnFilter: true,
     cell: ({ row }) => {
       const addresses = row.getValue("addresses") as Business["addresses"];
       const firstAddress = addresses?.[0];

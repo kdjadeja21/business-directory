@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,12 +11,36 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Upload, AlertCircle, Loader2, FileSpreadsheet } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { z } from "zod";
 import { businessService } from "@/lib/services/businessService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface PhoneNumber {
+  number: string;
+  countryCode: string;
+  hasWhatsapp: boolean;
+}
+
+interface Address {
+  lines: string[];
+  city: string;
+  link?: string;
+  phoneNumbers: PhoneNumber[];
+  emails: string[];
+}
+
+interface Business {
+  name: string;
+  brief: string;
+  description: string;
+  profilePhoto?: string;
+  categories: string[];
+  addresses: Address[];
+}
 
 // Use the same validation schema as BusinessForm
 const recordSchema = z.object({
@@ -67,7 +91,7 @@ const getSampleData = () => [
     name: "Second Business Name",
     brief: "A brief description of the second business (min 10 chars)",
     description: "A detailed description of the second business that explains services and offerings (min 20 chars)",
-    profilePhoto: "https://example.com/photo2.jpg",
+    profilePhoto: "",
     categories: "Retail, Fashion, Accessories",
     // First address
     addressLine1: "456 Oak Avenue",
@@ -102,17 +126,83 @@ const handleDownloadSample = () => {
   XLSX.writeFile(wb, "business_upload_sample.xlsx");
 };
 
+const isDuplicateBusiness = (existingBusinesses: Business[], newBusiness: Business) => {
+  return existingBusinesses.some(existing => {
+    // Check if any address from the new business matches completely with any address from existing business
+    return (
+      existing.name.toLowerCase() === newBusiness.name.toLowerCase() && // Name must match
+      newBusiness.addresses.some(newAddr => 
+        existing.addresses.some(existingAddr => {
+          // City must match
+          const cityMatch = existingAddr.city.toLowerCase() === newAddr.city.toLowerCase();
+          if (!cityMatch) return false;
+
+          // At least one phone number must match
+          const phoneMatch = existingAddr.phoneNumbers.some(existingPhone =>
+            newAddr.phoneNumbers.some(newPhone =>
+              existingPhone.number === newPhone.number
+            )
+          );
+          if (!phoneMatch) return false;
+
+          // At least one email must match
+          const emailMatch = existingAddr.emails.some(existingEmail =>
+            newAddr.emails.some(newEmail =>
+              existingEmail.toLowerCase() === newEmail.toLowerCase()
+            )
+          );
+          if (!emailMatch) return false;
+
+          // All conditions met
+          return true;
+        })
+      )
+    );
+  });
+};
+
 export function BulkUploadDialog({
   open,
   onOpenChange,
+  onSuccess,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }) {
+  const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [validRecords, setValidRecords] = useState<any[]>([]);
+  const [validRecords, setValidRecords] = useState<Business[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [existingBusinesses, setExistingBusinesses] = useState<Business[]>([]);
+
+  useEffect(() => {
+    const fetchExistingBusinesses = async () => {
+      try {
+        const businesses = await businessService.getAll();
+        setExistingBusinesses(businesses as Business[]);
+      } catch (error) {
+        console.error('Error fetching existing businesses:', error);
+      }
+    };
+
+    if (open) {
+      fetchExistingBusinesses();
+    }
+  }, [open]);
+
+  const resetState = () => {
+    setIsUploading(false);
+    setIsProcessing(false);
+    setValidRecords([]);
+    setValidationErrors([]);
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -134,67 +224,90 @@ export function BulkUploadDialog({
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       const errors: string[] = [];
-      const valid: any[] = [];
+      const valid: Business[] = [];
 
       jsonData.forEach((record: any, index) => {
         try {
-          const addresses = [];
-          
-          // First address
-          if (record.addressLine1) {
-            addresses.push({
-              lines: [record.addressLine1, record.addressLine2].filter(Boolean),
-              city: record.city,
-              link: record.mapLink,
-              phoneNumbers: [
-                record.phoneNumber1 && {
-                  number: record.phoneNumber1,
-                  countryCode: record.phoneCountryCode1 || "+91",
-                  hasWhatsapp: record.phoneWhatsapp1?.toLowerCase() === "true"
-                },
-                record.phoneNumber2 && {
-                  number: record.phoneNumber2,
-                  countryCode: record.phoneCountryCode2 || "+91",
-                  hasWhatsapp: record.phoneWhatsapp2?.toLowerCase() === "true"
-                }
-              ].filter(Boolean),
-              emails: [record.email1, record.email2].filter(Boolean)
-            });
-          }
-
-          // Second address
-          if (record.addressLine1_2) {
-            addresses.push({
-              lines: [record.addressLine1_2, record.addressLine2_2].filter(Boolean),
-              city: record.city_2,
-              link: record.mapLink_2,
-              phoneNumbers: [
-                record.phoneNumber1_2 && {
-                  number: record.phoneNumber1_2,
-                  countryCode: record.phoneCountryCode1_2 || "+91",
-                  hasWhatsapp: record.phoneWhatsapp1_2?.toLowerCase() === "true"
-                },
-                record.phoneNumber2_2 && {
-                  number: record.phoneNumber2_2,
-                  countryCode: record.phoneCountryCode2_2 || "+91",
-                  hasWhatsapp: record.phoneWhatsapp2_2?.toLowerCase() === "true"
-                }
-              ].filter(Boolean),
-              emails: [record.email1_2, record.email2_2].filter(Boolean)
-            });
-          }
-
           const transformedRecord = {
             name: record.name,
             brief: record.brief,
             description: record.description,
-            profilePhoto: record.profilePhoto,
+            profilePhoto: record.profilePhoto || "",
             categories: record.categories?.split(',').map((c: string) => c.trim()) || [],
-            addresses
+            addresses: [
+              // First address
+              record.addressLine1 && {
+                lines: [record.addressLine1, record.addressLine2 || ""].filter(Boolean),
+                city: record.city,
+                link: record.mapLink || "",
+                phoneNumbers: [
+                  record.phoneNumber1 && {
+                    number: record.phoneNumber1,
+                    countryCode: record.phoneCountryCode1 || "+91",
+                    hasWhatsapp: record.phoneWhatsapp1?.toLowerCase() === "true"
+                  },
+                  record.phoneNumber2 && {
+                    number: record.phoneNumber2,
+                    countryCode: record.phoneCountryCode2 || "+91",
+                    hasWhatsapp: record.phoneWhatsapp2?.toLowerCase() === "true"
+                  }
+                ].filter(Boolean),
+                emails: [record.email1 || "", record.email2 || ""].filter(Boolean)
+              },
+              // Second address
+              record.addressLine1_2 && {
+                lines: [record.addressLine1_2, record.addressLine2_2 || ""].filter(Boolean),
+                city: record.city_2,
+                link: record.mapLink_2 || "",
+                phoneNumbers: [
+                  record.phoneNumber1_2 && {
+                    number: record.phoneNumber1_2,
+                    countryCode: record.phoneCountryCode1_2 || "+91",
+                    hasWhatsapp: record.phoneWhatsapp1_2?.toLowerCase() === "true"
+                  },
+                  record.phoneNumber2_2 && {
+                    number: record.phoneNumber2_2,
+                    countryCode: record.phoneCountryCode2_2 || "+91",
+                    hasWhatsapp: record.phoneWhatsapp2_2?.toLowerCase() === "true"
+                  }
+                ].filter(Boolean),
+                emails: [record.email1_2 || "", record.email2_2 || ""].filter(Boolean)
+              }
+            ].filter(Boolean)
           };
 
+          // Validate schema
           recordSchema.parse(transformedRecord);
-          valid.push(transformedRecord);
+
+          // Check for duplicates
+          if (isDuplicateBusiness(existingBusinesses, transformedRecord)) {
+            transformedRecord.addresses.forEach((addr: Address) => {
+              const duplicateAddr = existingBusinesses
+                .filter(e => e.name.toLowerCase() === transformedRecord.name.toLowerCase())
+                .flatMap(b => b.addresses)
+                .find(ea => 
+                  ea.city.toLowerCase() === addr.city.toLowerCase() &&
+                  ea.phoneNumbers.some(ep => addr.phoneNumbers.some(ap => ep.number === ap.number)) &&
+                  ea.emails.some(ee => addr.emails.some(ae => ee.toLowerCase() === ae.toLowerCase()))
+                );
+
+              if (duplicateAddr) {
+                const matchingPhone = addr.phoneNumbers.find(phone => 
+                  duplicateAddr.phoneNumbers.some(ep => ep.number === phone.number)
+                );
+                const matchingEmail = addr.emails.find(email => 
+                  duplicateAddr.emails.some(ee => ee.toLowerCase() === email.toLowerCase())
+                );
+
+                errors.push(
+                  `Row ${index + 2}: Duplicate record found with name "${transformedRecord.name}", city "${addr.city}", ` +
+                  `phone "${matchingPhone?.number}", and email "${matchingEmail}"`
+                );
+              }
+            });
+          } else {
+            valid.push(transformedRecord);
+          }
         } catch (error) {
           if (error instanceof z.ZodError) {
             error.errors.forEach((err) => {
@@ -219,25 +332,53 @@ export function BulkUploadDialog({
   };
 
   const handleBulkUpload = async () => {
-    if (validRecords.length === 0) return;
+    if (!validRecords.length || !user) return;
 
     setIsProcessing(true);
+    const currentUsername = user.email?.split("@")[0] || "anonymous";
+    const recordsToAdd = validRecords.map(record => ({
+      ...record,
+      user_id: user.uid,
+      createdBy: currentUsername,
+      updatedBy: currentUsername,
+    }));
+
     try {
-      for (const record of validRecords) {
-        await businessService.create(record);
+      // First verify all records can be created
+      for (const record of recordsToAdd) {
+        try {
+          recordSchema.parse(record);
+        } catch (error) {
+          console.error('Validation error:', error);
+          throw new Error('One or more records failed validation');
+        }
       }
-      toast.success(`Successfully added ${validRecords.length} businesses`);
+
+      const results = await Promise.allSettled(
+        recordsToAdd.map(record => businessService.create(record))
+      );
+
+      toast.success(`Successfully added ${results.length} businesses`);
+      onSuccess?.(); // Call the success callback
       onOpenChange(false);
     } catch (error) {
       console.error('Error uploading records:', error);
-      toast.error("Failed to upload records");
+      toast.error("Failed to upload records. No records were added.");
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(open) => {
+        if (!open) {
+          resetState();
+        }
+        onOpenChange(open);
+      }}
+    >
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Bulk Upload Businesses</DialogTitle>
