@@ -183,46 +183,49 @@ export function BulkUploadDialog({
             description: record.description,
             profilePhoto: record.profilePhoto || "",
             categories: record.categories?.split(',').map((c: string) => c.trim()) || [],
-            addresses: [
-              // First address
-              record.addressLine1 && {
-                lines: [record.addressLine1, record.addressLine2 || ""].filter(Boolean),
-                city: record.city,
-                link: record.mapLink || "",
-                phoneNumbers: [
-                  record.phoneNumber1 && {
-                    number: record.phoneNumber1,
-                    countryCode: record.phoneCountryCode1 || "+91",
-                    hasWhatsapp: record.phoneWhatsapp1?.toLowerCase() === "true"
-                  },
-                  record.phoneNumber2 && {
-                    number: record.phoneNumber2,
-                    countryCode: record.phoneCountryCode2 || "+91",
-                    hasWhatsapp: record.phoneWhatsapp2?.toLowerCase() === "true"
-                  }
-                ].filter(Boolean),
-                emails: [record.email1 || "", record.email2 || ""].filter(Boolean)
-              },
-              // Second address
-              record.addressLine1_2 && {
-                lines: [record.addressLine1_2, record.addressLine2_2 || ""].filter(Boolean),
-                city: record.city_2,
-                link: record.mapLink_2 || "",
-                phoneNumbers: [
-                  record.phoneNumber1_2 && {
-                    number: record.phoneNumber1_2,
-                    countryCode: record.phoneCountryCode1_2 || "+91",
-                    hasWhatsapp: record.phoneWhatsapp1_2?.toLowerCase() === "true"
-                  },
-                  record.phoneNumber2_2 && {
-                    number: record.phoneNumber2_2,
-                    countryCode: record.phoneCountryCode2_2 || "+91",
-                    hasWhatsapp: record.phoneWhatsapp2_2?.toLowerCase() === "true"
-                  }
-                ].filter(Boolean),
-                emails: [record.email1_2 || "", record.email2_2 || ""].filter(Boolean)
+            addresses: (() => {
+              const addresses = [];
+              let addressIndex = 1;
+              
+              while (true) {
+                const suffix = addressIndex === 1 ? '' : `_${addressIndex}`;
+                const addressLine1Field = `addressLine1${suffix}`;
+                
+                // Break if no more addresses exist
+                if (!record[addressLine1Field]) break;
+                
+                addresses.push({
+                  lines: [
+                    record[addressLine1Field],
+                    record[`addressLine2${suffix}`] || ""
+                  ].filter(Boolean),
+                  city: record[`city${suffix}`],
+                  link: record[`mapLink${suffix}`] || "",
+                  phoneNumbers: [
+                    // First phone number for this address
+                    record[`phoneNumber1${suffix}`] && {
+                      number: record[`phoneNumber1${suffix}`],
+                      countryCode: record[`phoneCountryCode1${suffix}`] || "+91",
+                      hasWhatsapp: record[`phoneWhatsapp1${suffix}`]?.toLowerCase() === "true"
+                    },
+                    // Second phone number for this address
+                    record[`phoneNumber2${suffix}`] && {
+                      number: record[`phoneNumber2${suffix}`],
+                      countryCode: record[`phoneCountryCode2${suffix}`] || "+91",
+                      hasWhatsapp: record[`phoneWhatsapp2${suffix}`]?.toLowerCase() === "true"
+                    }
+                  ].filter(Boolean),
+                  emails: [
+                    record[`email1${suffix}`] || "",
+                    record[`email2${suffix}`] || ""
+                  ].filter(Boolean)
+                });
+                
+                addressIndex++;
               }
-            ].filter(Boolean)
+              
+              return addresses;
+            })()
           };
 
           // Validate schema
