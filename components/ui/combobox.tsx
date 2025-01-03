@@ -61,7 +61,7 @@ export function Combobox({
       <PopoverContent className="w-full sm:w-[200px] p-0">
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
+          <CommandList className="max-h-[150px]">
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
