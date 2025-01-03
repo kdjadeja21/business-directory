@@ -2,17 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
+import { MapPin, Tags, X, Search, FilterX } from "lucide-react";
+import { Combobox } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
-import { CITIES, cityUtils, CityName } from "@/lib/constants/cities";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, MapPin, Tags, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 interface SearchBarProps {
   value: string;
@@ -35,54 +27,29 @@ export function SearchBar({
   onTagsChange,
   availableCategories,
 }: SearchBarProps) {
-  const [citySearchQuery, setCitySearchQuery] = useState("");
-  const [categorySearchQuery, setCategorySearchQuery] = useState("");
+  const cityOptions = useMemo(() => [
+    { value: "", label: "All Cities" },
+    ...availableCities.map(city => ({
+      value: city,
+      label: city
+    }))
+  ], [availableCities]);
 
-  // Combine constant cities and dynamic cities, prioritizing available cities
-  const allCities = useMemo(() => {
-    const dynamicCities = Array.from(new Set(availableCities));
-    // Remove duplicates by creating a Set from the combined array
-    const uniqueCities = Array.from(
-      new Set([...dynamicCities])
-    );
+  const categoryOptions = useMemo(() => [
+    { value: "", label: "All Categories" },
+    ...availableCategories.map(category => ({
+      value: category,
+      label: category
+    }))
+  ], [availableCategories]);
 
-    // Sort cities with available ones first, then alphabetically
-    return uniqueCities.sort((a, b) => {
-      const aAvailable = availableCities.includes(a);
-      const bAvailable = availableCities.includes(b);
-      if (aAvailable && !bAvailable) return -1;
-      if (!aAvailable && bAvailable) return 1;
-      return a.localeCompare(b);
-    });
-  }, [availableCities]);
-
-  // Filter cities based on search
-  const filteredCities = useMemo(() => {
-    const lowercaseQuery = citySearchQuery.toLowerCase();
-    return allCities.filter((city) =>
-      city.toLowerCase().includes(lowercaseQuery)
-    );
-  }, [allCities, citySearchQuery]);
-
-  // Filter categories based on search
-  const filteredCategories = useMemo(() => {
-    const lowercaseQuery = categorySearchQuery.toLowerCase();
-    return availableCategories.filter((category) =>
-      category.toLowerCase().includes(lowercaseQuery)
-    );
-  }, [availableCategories, categorySearchQuery]);
-
-  const handleCityChange = (value: string) => {
-    setSelectedCity(value === "all" ? "" : value);
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setSelectedCity("");
+    onTagsChange([]);
   };
 
-  const isConstCity = (city: string): city is CityName => {
-    return CITIES.includes(city as CityName);
-  };
-
-  const handleCategoryChange = (value: string) => {
-    onTagsChange(value === "all" ? [] : [value]);
-  };
+  const hasActiveFilters = searchQuery || selectedCity || selectedTags.length > 0;
 
   return (
     <div className="w-full">
@@ -105,63 +72,40 @@ export function SearchBar({
             </button>
           )}
         </div>
-        <Select value={selectedCity || "all"} onValueChange={handleCityChange}>
-          <SelectTrigger className="w-[200px]">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <SelectValue placeholder="Select City" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <div className="p-2 relative">
-              <Input
-                type="text"
-                placeholder="Search cities..."
-                value={citySearchQuery}
-                onChange={(e) => setCitySearchQuery(e.target.value)}
-                className="mb-2"
-              />
-            </div>
-            <SelectItem value="all">All Cities</SelectItem>
-            {filteredCities.map((city) => (
-              <SelectItem
-                key={city}
-                value={city}
-                className="flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">{city}</div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={selectedTags[0] || "all"}
-          onValueChange={handleCategoryChange}
-        >
-          <SelectTrigger className="w-[200px]">
-            <div className="flex items-center gap-2">
-              <Tags className="h-4 w-4" />
-              <SelectValue placeholder="Select category..." />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <div className="p-2 relative">
-              <Input
-                type="text"
-                placeholder="Search categories..."
-                value={categorySearchQuery}
-                onChange={(e) => setCategorySearchQuery(e.target.value)}
-                className="mb-2"
-              />
-            </div>
-            <SelectItem value="all">All Categories</SelectItem>
-            {filteredCategories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-2 w-full sm:w-auto">
+          <Combobox
+            options={cityOptions}
+            value={selectedCity}
+            onValueChange={setSelectedCity}
+            placeholder="Select City"
+            searchPlaceholder="Search cities..."
+            icon={<MapPin className="h-4 w-4" />}
+            emptyText="No cities found."
+          />
+
+          <Combobox
+            options={categoryOptions}
+            value={selectedTags[0] || ""}
+            onValueChange={(value) => onTagsChange(value ? [value] : [])}
+            placeholder="Select Category"
+            searchPlaceholder="Search categories..."
+            icon={<Tags className="h-4 w-4" />}
+            emptyText="No categories found."
+          />
+
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="h-10 flex-1 sm:h-10 sm:w-10 sm:p-0 sm:flex-initial text-muted-foreground hover:text-foreground sm:self-auto self-end"
+              title="Clear all filters"
+            >
+              <FilterX className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-0 mr-2" />
+              <span className="sm:hidden">Clear Filters</span>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

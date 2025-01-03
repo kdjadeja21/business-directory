@@ -18,6 +18,7 @@ import * as XLSX from 'xlsx';
 import { z } from "zod";
 import { businessService } from "@/lib/services/businessService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getSampleData } from "@/lib/utils/sampleData";
 
 interface PhoneNumber {
   number: string;
@@ -65,58 +66,6 @@ const recordSchema = z.object({
     })
   ).min(1),
 });
-
-const getSampleData = () => [
-  {
-    name: "First Business Name",
-    brief: "A brief description of the first business (min 10 chars)",
-    description: "A detailed description of the first business that explains services and offerings (min 20 chars)",
-    profilePhoto: "https://example.com/photo1.jpg",
-    categories: "Restaurant, Cafe, Food",
-    // First address
-    addressLine1: "123 Main St",
-    addressLine2: "Suite 100",
-    city: "New York",
-    mapLink: "https://maps.google.com/location1",
-    phoneNumber1: "1234567890",
-    phoneCountryCode1: "+1",
-    phoneWhatsapp1: "true",
-    phoneNumber2: "0987654321",
-    phoneCountryCode2: "+1",
-    phoneWhatsapp2: "false",
-    email1: "contact@business1.com",
-    email2: "info@business1.com"
-  },
-  {
-    name: "Second Business Name",
-    brief: "A brief description of the second business (min 10 chars)",
-    description: "A detailed description of the second business that explains services and offerings (min 20 chars)",
-    profilePhoto: "",
-    categories: "Retail, Fashion, Accessories",
-    // First address
-    addressLine1: "456 Oak Avenue",
-    addressLine2: "Floor 2",
-    city: "Los Angeles",
-    mapLink: "https://maps.google.com/location2",
-    phoneNumber1: "2345678901",
-    phoneCountryCode1: "+1",
-    phoneWhatsapp1: "true",
-    email1: "la@business2.com",
-    // Second address
-    addressLine1_2: "789 Pine Street",
-    addressLine2_2: "Shop 45",
-    city_2: "San Francisco",
-    mapLink_2: "https://maps.google.com/location3",
-    phoneNumber1_2: "3456789012",
-    phoneCountryCode1_2: "+1",
-    phoneWhatsapp1_2: "false",
-    phoneNumber2_2: "4567890123",
-    phoneCountryCode2_2: "+1",
-    phoneWhatsapp2_2: "true",
-    email1_2: "sf@business2.com",
-    email2_2: "info@business2.com"
-  }
-];
 
 const handleDownloadSample = () => {
   const sampleData = getSampleData();

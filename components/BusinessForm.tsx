@@ -39,20 +39,6 @@ import { countries } from "@/lib/constants/countries";
 type Timer = ReturnType<typeof setTimeout>;
 type DebouncedFunction = (...args: any[]) => void;
 
-function createDebounce(func: Function, wait: number): DebouncedFunction {
-  let timeout: Timer;
-  
-  return function executedFunction(...args: any[]) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   brief: z.string().min(10, "Brief description must be at least 10 characters"),
@@ -201,23 +187,23 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
       country.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const debouncedPhoneUpdate = useCallback(
-    createDebounce((addressIndex: number, phoneIndex: number, value: string, field: any) => {
+  const debouncedPhoneUpdate = useCallback((addressIndex: number, phoneIndex: number, value: string, field: any) => {
+    const timer = setTimeout(() => {
       const newAddresses = [...field.value];
       newAddresses[addressIndex].phoneNumbers[phoneIndex].number = value;
       field.onChange(newAddresses);
-    }, 300),
-    []
-  );
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const debouncedEmailUpdate = useCallback(
-    createDebounce((addressIndex: number, emailIndex: number, value: string, field: any) => {
+  const debouncedEmailUpdate = useCallback((addressIndex: number, emailIndex: number, value: string, field: any) => {
+    const timer = setTimeout(() => {
       const newAddresses = [...field.value];
       newAddresses[addressIndex].emails[emailIndex] = value;
       field.onChange(newAddresses);
-    }, 300),
-    []
-  );
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
         <Form {...form}>
