@@ -30,6 +30,12 @@ export function useBusinessSearch(businesses: Business[]) {
         .trim()
         .includes(searchQuery.toLowerCase().trim());
 
+      // Search in brief
+      const matchesBrief = business.brief
+        .toLowerCase()
+        .trim()
+        .includes(searchQuery.toLowerCase().trim());
+
       // Search in cities (across all addresses)
       const matchesCitySearch = business.addresses.some((address) =>
         address.city.toLowerCase().trim().includes(searchQuery.toLowerCase().trim())
@@ -42,7 +48,7 @@ export function useBusinessSearch(businesses: Business[]) {
 
       // Combined search match
       const matchesSearch =
-        matchesName || matchesCitySearch || matchesCategorySearch;
+        matchesName || matchesBrief || matchesCitySearch || matchesCategorySearch;
 
       // Filter by selected city (across all addresses)
       const matchesCity = selectedCity 
