@@ -65,6 +65,85 @@ const recordSchema = z.object({
       emails: z.array(z.string().email("Invalid email format")),
     })
   ).min(1),
+  availabilities1: z.object({
+    enabled: z.boolean(),
+    schedule: z.record(z.string(), z.object({
+      isOpen: z.boolean(),
+      timeSlots: z.array(z.object({
+        openTime: z.string(),
+        closeTime: z.string(),
+      })),
+    })),
+  }).optional(),
+  availabilities2: z.object({
+    enabled: z.boolean(),
+    schedule: z.record(z.string(), z.object({
+      isOpen: z.boolean(),
+      timeSlots: z.array(z.object({
+        openTime: z.string(),
+        closeTime: z.string(),
+      })),
+    })),
+  }).optional(),
+}).transform((data: Record<string, any>) => {
+  const parseTimeSlots = (timeStr: string) => {
+    if (timeStr === 'closed') return [];
+    return timeStr.split(',').map(slot => {
+      const [openTime, closeTime] = slot.trim().split('-');
+      return { openTime, closeTime };
+    });
+  };
+
+  const createSchedule = (prefix: string) => {
+    if (data[`availabilitiesEnabled${prefix}`] !== 'true') return undefined;
+    
+    return {
+      enabled: true,
+      schedule: {
+        monday: { isOpen: data[`monday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`monday${prefix}`] || '') },
+        tuesday: { isOpen: data[`tuesday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`tuesday${prefix}`] || '') },
+        wednesday: { isOpen: data[`wednesday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`wednesday${prefix}`] || '') },
+        thursday: { isOpen: data[`thursday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`thursday${prefix}`] || '') },
+        friday: { isOpen: data[`friday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`friday${prefix}`] || '') },
+        saturday: { isOpen: data[`saturday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`saturday${prefix}`] || '') },
+        sunday: { isOpen: data[`sunday${prefix}`] !== 'closed', timeSlots: parseTimeSlots(data[`sunday${prefix}`] || '') }
+      }
+    };
+  };
+
+  return {
+    addresses: [
+      {
+        lines: [data.addressLine1, data.addressLine2].filter(Boolean),
+        city: data.city,
+        link: data.mapLink || "",
+        phoneNumbers: [
+          {
+            number: data.phoneNumber1,
+            countryCode: data.phoneCountryCode1,
+            hasWhatsapp: data.phoneWhatsapp1 === "true"
+          },
+          // ... other phone numbers
+        ].filter(phone => phone.number),
+        emails: [data.email1, data.email2].filter(Boolean),
+        availabilities: createSchedule('1')
+      },
+      data.addressLine1_2 ? {
+        lines: [data.addressLine1_2, data.addressLine2_2].filter(Boolean),
+        city: data.city_2,
+        link: data.mapLink_2 || "",
+        phoneNumbers: [
+          {
+            number: data.phoneNumber1_2,
+            countryCode: data.phoneCountryCode1_2,
+            hasWhatsapp: data.phoneWhatsapp1_2 === "true"
+          }
+        ].filter(phone => phone.number),
+        emails: [data.email1_2].filter(Boolean),
+        availabilities: createSchedule('2')
+      } : null
+    ].filter(Boolean)
+  };
 });
 
 const handleDownloadSample = () => {

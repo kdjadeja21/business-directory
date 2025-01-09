@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Share2,
   CreditCard,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +19,22 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getInitials, truncateText, generateWhatsAppLink } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface BusinessDetailsProps {
   business: Business;
 }
+
+const formatTime = (time: string) => {
+  const [hour, minute] = time.split(':');
+  const hourNum = parseInt(hour);
+  const period = hourNum >= 12 ? 'PM' : 'AM';
+  const hour12 = hourNum % 12 || 12;
+  return `${hour12}:${minute} ${period}`;
+};
+
+const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+type DayOfWeek = typeof days[number];
 
 export function BusinessDetails({ business }: BusinessDetailsProps) {
   const router = useRouter();
@@ -29,23 +42,22 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
     process.env.NEXT_PUBLIC_BASE_URL || ""
   }/profilecard/${business.id}`;
 
+  const [showFullBrief, setShowFullBrief] = useState(false);
+
   const handleShare = async () => {
     try {
       if (navigator.share) {
-        // Use Web Share API if available
         await navigator.share({
           title: business.name,
           text: business.brief,
           url: profileCardUrl,
         });
       } else {
-        // Fallback to clipboard copy
         await navigator.clipboard.writeText(profileCardUrl);
         toast.success("Profile card link copied to clipboard!");
       }
     } catch (error) {
       console.error("Error sharing:", error);
-      // toast.error("Failed to share profile card");
     }
   };
 
@@ -97,12 +109,16 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
               <h1 className="text-4xl font-bold mb-3 text-primary">
                 {business.name}
               </h1>
-              {/* <div className="flex items-center gap-2 text-muted-foreground justify-center md:justify-start">
-                <MapPin className="h-5 w-5" />
-                <span className="text-lg">{business.city}</span>
-              </div> */}
-              <p className="text-muted-foreground mt-3 text-lg break-words overflow-hidden text-ellipsis whitespace-normal max-w-full">
-                {truncateText(business.brief, 51)}
+              <p className="text-muted-foreground mt-3 text-lg break-words">
+                {showFullBrief ? business.brief : truncateText(business.brief, 51)}
+                {business.brief.length > 51 && (
+                  <button
+                    onClick={() => setShowFullBrief(!showFullBrief)}
+                    className="ml-2 text-primary hover:text-primary/80 font-medium"
+                  >
+                    {showFullBrief ? "Show Less" : "Show More"}
+                  </button>
+                )}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 justify-center md:justify-start">
@@ -133,22 +149,17 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
               {business.addresses.map((address, addressIndex) => (
                 <Card key={addressIndex} className="bg-slate-50/50">
                   <CardContent className="p-6">
-                    {/* Location Header */}
                     <div className="flex items-center gap-2 mb-4">
                       <MapPin className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-semibold">
-                        {address.city}
-                      </h3>
+                      <h3 className="text-lg font-semibold">{address.city}</h3>
                     </div>
 
-                    {/* Address Lines */}
                     <div className="space-y-1 mb-4 text-muted-foreground">
                       {address.lines.map((line, lineIndex) => (
                         <p key={lineIndex}>{line}</p>
                       ))}
                     </div>
 
-                    {/* Google Maps Link */}
                     {address.link && (
                       <a
                         href={address.link}
@@ -161,9 +172,7 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                       </a>
                     )}
 
-                    {/* Contact Information */}
                     <div className="space-y-3 mt-4 border-t pt-4">
-                      {/* Phone Numbers */}
                       {address.phoneNumbers.map((phone, phoneIndex) => (
                         <div key={phoneIndex} className="flex items-center gap-3 group">
                           <Phone className="h-5 w-5 text-primary shrink-0" />
@@ -175,10 +184,7 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                           </a>
                           {phone.hasWhatsapp && (
                             <a
-                              href={generateWhatsAppLink(
-                                phone.countryCode,
-                                phone.number
-                              )}
+                              href={generateWhatsAppLink(phone.countryCode, phone.number)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-green-500 hover:text-green-600 transition-colors"
@@ -189,7 +195,6 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                         </div>
                       ))}
 
-                      {/* Email Addresses */}
                       {address.emails.map((email, emailIndex) => (
                         <div key={emailIndex} className="flex items-center gap-3 group">
                           <Mail className="h-5 w-5 text-primary shrink-0" />
@@ -201,6 +206,52 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                           </a>
                         </div>
                       ))}
+
+                      {address.availabilities?.enabled && (
+                        <div className="space-y-3 mt-4 border-t pt-4">
+                          <div className="flex items-center gap-2 text-primary mb-2">
+                            <Clock className="h-5 w-5" />
+                            <h3 className="font-semibold text-lg">Business Hours</h3>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 gap-2">
+                            {days.map((day) => {
+                              const schedule = address.availabilities?.schedule?.[day as DayOfWeek];
+                              if (!schedule?.isOpen) return null;
+
+                              return (
+                                <div key={day} className="flex items-start gap-4">
+                                  <div className="w-24 capitalize font-medium">
+                                    {day}
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {schedule.timeSlots.map((slot, index) => (
+                                      <span key={index} className="text-muted-foreground">
+                                        {formatTime(slot.openTime)} - {formatTime(slot.closeTime)}
+                                        {index < schedule.timeSlots.length - 1 && (
+                                          <span className="mx-2 text-muted-foreground/50">|</span>
+                                        )}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground mt-2">
+                            Closed on:{' '}
+                            {days
+                              .filter(day => !address.availabilities?.schedule?.[day as DayOfWeek]?.isOpen)
+                              .map((day, index, array) => (
+                                <span key={day}>
+                                  <span className="capitalize">{day}</span>
+                                  {index < array.length - 1 && ', '}
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

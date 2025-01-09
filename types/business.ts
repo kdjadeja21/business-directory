@@ -15,6 +15,18 @@ export interface Business {
       hasWhatsapp: boolean;
     }>;
     emails: string[];
+    availabilities?: {
+      enabled: boolean;
+      schedule?: {
+        [key in 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday']?: {
+          isOpen: boolean;
+          timeSlots: Array<{
+            openTime: string;
+            closeTime: string;
+          }>;
+        };
+      };
+    };
   }[];
   createdAt: string;
   updatedAt: string;

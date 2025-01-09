@@ -19,14 +19,30 @@ export const getSampleData = () => [
     phoneWhatsapp2: "false",
     email1: "legal.excellence@gmail.com",
     email2: "info.excellence@gmail.com",
+    availabilitiesEnabled1: "true",
+    monday1: "09:00-13:00, 14:00-18:00",
+    tuesday1: "09:00-13:00, 14:00-18:00",
+    wednesday1: "09:00-13:00, 14:00-18:00",
+    thursday1: "09:00-13:00, 14:00-18:00",
+    friday1: "09:00-13:00, 14:00-18:00",
+    saturday1: "09:00-13:00",
+    sunday1: "closed",
     addressLine1_2: "505, Business Hub",
     addressLine2_2: "Race Course Ring Road",
-    city_2: "Rajkot", 
+    city_2: "Rajkot",
     mapLink_2: "https://maps.google.com/location2",
     phoneNumber1_2: "9812345678",
     phoneCountryCode1_2: "+91",
     phoneWhatsapp1_2: "true",
-    email1_2: "legal.excellence2@gmail.com"
+    email1_2: "legal.excellence2@gmail.com",
+    availabilitiesEnabled2: "true", 
+    monday2: "10:00-19:00",
+    tuesday2: "10:00-19:00",
+    wednesday2: "10:00-19:00",
+    thursday2: "10:00-19:00",
+    friday2: "10:00-19:00",
+    saturday2: "closed",
+    sunday2: "closed"
   },
   {
     name: "Justice Chambers International",
@@ -41,6 +57,7 @@ export const getSampleData = () => [
     phoneNumber1: "9854321098",
     phoneCountryCode1: "+91",
     phoneWhatsapp1: "true",
-    email1: "justice.chambers@gmail.com"
+    email1: "justice.chambers@gmail.com",
+    availabilitiesEnabled1: "false"
   }
 ];
