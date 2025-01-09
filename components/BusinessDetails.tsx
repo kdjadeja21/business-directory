@@ -209,29 +209,29 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
 
                       {address.availabilities?.enabled && (
                         <div className="space-y-3 mt-4 border-t pt-4">
-                          <div className="flex items-center gap-2 text-primary mb-2">
+                          <div className="flex items-center gap-2 text-primary mb-4">
                             <Clock className="h-5 w-5" />
                             <h3 className="font-semibold text-lg">Business Hours</h3>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-2">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                             {days.map((day) => {
                               const schedule = address.availabilities?.schedule?.[day as DayOfWeek];
                               if (!schedule?.isOpen) return null;
 
                               return (
-                                <div key={day} className="flex items-start gap-4">
-                                  <div className="w-24 capitalize font-medium">
+                                <div key={day} className="flex items-start py-2 border-b last:border-b-0 md:even:border-b">
+                                  <div className="w-24 capitalize font-medium text-gray-900">
                                     {day}
                                   </div>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="flex-1">
                                     {schedule.timeSlots.map((slot, index) => (
-                                      <span key={index} className="text-muted-foreground">
+                                      <div key={index} className="text-muted-foreground">
                                         {formatTime(slot.openTime)} - {formatTime(slot.closeTime)}
                                         {index < schedule.timeSlots.length - 1 && (
-                                          <span className="mx-2 text-muted-foreground/50">|</span>
+                                          <div className="w-1.5 h-1.5 bg-muted-foreground/30 rounded-full mx-2 inline-block" />
                                         )}
-                                      </span>
+                                      </div>
                                     ))}
                                   </div>
                                 </div>
@@ -239,16 +239,18 @@ export function BusinessDetails({ business }: BusinessDetailsProps) {
                             })}
                           </div>
 
-                          <div className="text-sm text-muted-foreground mt-2">
-                            Closed on:{' '}
-                            {days
-                              .filter(day => !address.availabilities?.schedule?.[day as DayOfWeek]?.isOpen)
-                              .map((day, index, array) => (
-                                <span key={day}>
-                                  <span className="capitalize">{day}</span>
-                                  {index < array.length - 1 && ', '}
-                                </span>
-                              ))}
+                          <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                            <p className="text-sm text-muted-foreground">
+                              <span className="font-medium text-gray-900">Closed on: </span>
+                              {days
+                                .filter(day => !address.availabilities?.schedule?.[day as DayOfWeek]?.isOpen)
+                                .map((day, index, array) => (
+                                  <span key={day}>
+                                    <span className="capitalize">{day}</span>
+                                    {index < array.length - 1 && ', '}
+                                  </span>
+                                ))}
+                            </p>
                           </div>
                         </div>
                       )}

@@ -279,6 +279,22 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  const applyTimingToAllDays = (addressIndex: number, sourceDay: string, field: any) => {
+    const newAddresses = [...field.value];
+    const sourceSchedule = newAddresses[addressIndex].availabilities?.schedule[sourceDay];
+    
+    if (!sourceSchedule?.isOpen) return;
+
+    ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(day => {
+      if (newAddresses[addressIndex].availabilities?.schedule[day]?.isOpen) {
+        newAddresses[addressIndex].availabilities.schedule[day].timeSlots = 
+          [...sourceSchedule.timeSlots.map((slot: { openTime: string; closeTime: string }) => ({ ...slot }))];
+      }
+    });
+    
+    field.onChange(newAddresses);
+  };
+
   return (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -721,6 +737,17 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                                             }}
                                           />
                                           <div className="w-24 capitalize">{day}</div>
+                                          {address.availabilities?.schedule?.[day]?.isOpen && (
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => applyTimingToAllDays(addressIndex, day, field)}
+                                              className="ml-auto text-xs"
+                                            >
+                                              Apply to All Active Days
+                                            </Button>
+                                          )}
                                         </div>
 
                                         {address.availabilities?.schedule?.[day]?.isOpen && (
