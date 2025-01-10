@@ -58,7 +58,7 @@ const formSchema = z.object({
           hasWhatsapp: z.boolean(),
         })
       ).transform(phones => phones.filter(phone => phone.number.trim() !== '')),
-      emails: z.array(z.string().email("Invalid email format"))
+      emails: z.array(z.string().email("Invalid email format").or(z.string().length(0)))
         .transform(emails => emails.filter(email => email.trim() !== '')),
       availabilities: z.object({
         enabled: z.boolean(),
@@ -645,7 +645,7 @@ export function BusinessForm({ initialData, isEditing }: BusinessFormProps) {
                       </div>
 
                               <div className="bg-transparent sm:bg-white p-2 sm:p-4 rounded-lg sm:border sm:border-slate-200">
-                                <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Email Addresses</h4>
+                                <h4 className="text-sm font-medium text-gray-700 mb-2 sm:mb-3">Email Addresses (Optional)</h4>
                       <div className="space-y-3">
                                   {address.emails.map((email, emailIndex) => (
                                     <div key={emailIndex} className="flex gap-3">
