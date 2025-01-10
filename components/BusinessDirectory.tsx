@@ -55,7 +55,12 @@ export default function BusinessDirectory() {
   } = useBusinessSearch(businesses);
 
   const scrollToTop = () => {
-    mainRef.current?.scrollIntoView({ behavior: "smooth" });
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    });
   };
 
   const handlePageChange = (page: number) => {
@@ -102,7 +107,7 @@ export default function BusinessDirectory() {
               onChange={handleItemsPerPageChange}
               options={[5, 10, 15, 20]}
             />
-            
+
             {totalPages > 1 && (
               <Pagination
                 currentPage={currentPage}
